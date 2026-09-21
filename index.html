@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Festival Orders</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="description" content="Offline order capture for Cutco festival sales. Saves orders on the phone until you are back on signal.">
+<meta name="theme-color" content="#f5f1de">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Orders">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===== Lock screen ===== -->
+<section id="lock" class="screen lockscreen">
+  <div class="lockbox">
+    <div class="logo">Festival Orders</div>
+    <p id="lockMsg" class="lockmsg">Enter your PIN</p>
+    <div id="pinDots" class="pindots"></div>
+    <div id="pinPad" class="pinpad"></div>
+    <p id="lockErr" class="lockerr" hidden></p>
+    <button id="btnForgot" class="linkbtn">Forgot PIN?</button>
+    <p id="lockNote" class="lockhelp" hidden></p>
+  </div>
+</section>
+
+<!-- ===== Home: list of orders ===== -->
+<section id="home" class="screen" hidden>
+  <header class="bar">
+    <h1>Festival Orders</h1>
+    <div class="spacer"></div>
+    <button id="btnSettings" class="btn icon" title="Settings" aria-label="Settings">&#9881;</button>
+  </header>
+  <div class="tabs" id="homeTabs">
+    <button data-f="all" class="on">All</button>
+    <button data-f="draft">In progress</button>
+    <button data-f="ready">To enter</button>
+    <button data-f="entered">Entered</button>
+  </div>
+  <div id="orderList" class="list"></div>
+  <p id="homeEmpty" class="empty" hidden>No orders yet.<br>Tap <b>+ New Order</b> to start one.</p>
+  <footer class="footbar">
+    <button id="btnShareAll" class="btn">Email pending</button>
+    <button id="btnNew" class="btn primary big">+ New Order</button>
+  </footer>
+</section>
+
+<!-- ===== Order editor ===== -->
+<section id="editor" class="screen" hidden>
+  <header class="bar">
+    <button id="btnEdBack" class="btn icon" aria-label="Back">&#8249;</button>
+    <div class="title" id="edTitle">New Order</div>
+    <div class="spacer"></div>
+    <button id="btnEdClose" class="btn">Save &amp; Close</button>
+  </header>
+  <div class="steps" id="steps">
+    <button data-s="0"><span class="num">1</span><span>Items</span></button>
+    <button data-s="1"><span class="num">2</span><span>Customer</span></button>
+    <button data-s="2"><span class="num">3</span><span>Payment</span></button>
+    <button data-s="3"><span class="num">4</span><span>Review</span></button>
+  </div>
+  <div id="cpoBand" class="cpoband"></div>
+  <div id="edBody" class="body"></div>
+  <footer class="footbar">
+    <button id="btnPrev" class="btn">Back</button>
+    <div class="spacer"></div>
+    <div id="edTotal" class="total"></div>
+    <button id="btnNext" class="btn primary">Next</button>
+  </footer>
+</section>
+
+<!-- ===== Order detail (read-only, for re-entry) ===== -->
+<section id="detail" class="screen" hidden>
+  <header class="bar">
+    <button id="btnDtBack" class="btn icon" aria-label="Back">&#8249;</button>
+    <div class="title" id="dtTitle">Order</div>
+    <div class="spacer"></div>
+    <button id="btnDtEdit" class="btn">Edit</button>
+  </header>
+  <div id="dtBody" class="body"></div>
+</section>
+
+<!-- ===== Settings ===== -->
+<section id="settings" class="screen" hidden>
+  <header class="bar">
+    <button id="btnStBack" class="btn icon" aria-label="Back">&#8249;</button>
+    <div class="title">Settings</div>
+    <div class="spacer"></div>
+  </header>
+  <div id="stBody" class="body"></div>
+  <input type="file" id="fileRestore" accept=".json,application/json" hidden>
+</section>
+
+<!-- ===== Modal / sheet ===== -->
+<div id="modal" class="modal" hidden>
+  <div class="sheet" id="sheet"></div>
+</div>
+<div id="toast" class="toast" hidden></div>
+
+<script src="catalog.js"></script>
+<script src="taxrates.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
