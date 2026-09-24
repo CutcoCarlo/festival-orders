@@ -3,7 +3,7 @@
    derived from the PIN and is never exported. */
 'use strict';
 
-const APP_VERSION = '1.4.1';
+const APP_VERSION = '1.5.0';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const h = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -490,11 +490,29 @@ function renderCart() {
       <div class="ci"><div class="cn">${h(i.name)}</div><div class="cd">#${h(itemNo(i))}${i.b ? (lineDesc(i) ? ' · ' + h(lineDesc(i)) : '') : ''}${i.note ? ' · “' + h(i.note) + '”' : ''}<br>${q} × ${i.free ? 'BONUS' : money(i.price)}<span class="cpo"> · CPO ${money(lineCpo(i))}${i.free ? ' · −' + q * i.pts + ' pts' : ''}</span></div></div>
       <div class="lp">${i.free ? '$0.00' : money(q * i.price)}</div><div class="chev">›</div></div>`; }).join('')
     : '<p class="empty">Nothing in the cart yet.</p>')
-    + `<div class="box" style="margin-top:12px"><div class="tot"><span>Value</span><span class="money">${money(t.value)}</span></div><div class="tot"><span>Customer Pays</span><span class="money">${money(t.sub)}</span></div>${t.bonusValue ? `<div class="tot cpo ${t.bonusOver ? 'overtxt' : ''}"><span>Bonus items (limit ${bonusLimit()}% = ${money(t.bonusAllowed)})</span><span>${money(t.bonusValue)}</span></div>` : ''}${t.bonusOver ? `<p class="warn cpo" style="margin:6px 0">Bonus items are over the ${bonusLimit()}% limit. Remove a bonus item or add paid items.</p>` : ''}${t.bonusPts ? `<div class="tot cpo"><span>Bonus points given</span><span>${t.bonusPts} pts</span></div>` : ''}<div class="tot grand cpo"><span>CPO</span><span class="money">${money(t.cpo)}</span></div></div>
+    + dealHtml()
+    + `<div class="box cpo" style="margin-top:12px"><div class="tot"><span>Value</span><span class="money">${money(t.value)}</span></div><div class="tot"><span>Customer Pays</span><span class="money">${money(t.sub)}</span></div>${t.bonusValue ? `<div class="tot cpo ${t.bonusOver ? 'overtxt' : ''}"><span>Bonus items (limit ${bonusLimit()}% = ${money(t.bonusAllowed)})</span><span>${money(t.bonusValue)}</span></div>` : ''}${t.bonusOver ? `<p class="warn cpo" style="margin:6px 0">Bonus items are over the ${bonusLimit()}% limit. Remove a bonus item or add paid items.</p>` : ''}${t.bonusPts ? `<div class="tot cpo"><span>Bonus points given</span><span>${t.bonusPts} pts</span></div>` : ''}<div class="tot grand cpo"><span>CPO</span><span class="money">${money(t.cpo)}</span></div></div>
     <p class="note">Tap an item to change its options, quantity, price or note, or to remove it.</p>`;
   $('#cartCount').textContent = cur.items.length ? `(${cur.items.reduce((n, i) => n + (+i.qty || 0), 0)})` : '';
 }
-$('#cartBody').addEventListener('click', e => { const c = e.target.closest('.cline'); if (!c) return; const l = cur.items.find(i => i.id === c.dataset.line); if (l) optionsSheet({ line: l }); });
+/* Customer-facing summary on the cart page: value, deal, savings and payment choices. */
+function dealHtml() {
+  if (!cur.items.length) return '';
+  const t = totals(cur); const save = r2(t.value - t.sub);
+  const plans = plansFor(cur, t.sub);
+  if (!plans.find(p => p.n === +cur.pay.plan)) cur.pay.plan = 1;
+  const rows = plans.map(p => { const tt = totals(Object.assign({}, cur, { pay: Object.assign({}, cur.pay, { plan: p.n }) })); return `<button class="plan ${+cur.pay.plan === p.n ? 'on' : ''}" data-plan="${p.n}"><b>${p.n === 1 ? 'Pay in full' : p.n + ' payments'}</b><span class="amt">${money(tt.pays[0])}${p.n > 1 ? ' each' : ''}</span><small>${p.n > 1 && p.fee ? money(p.fee) + ' admin fee incl. · ' : ''}total ${money(tt.total)}</small></button>`; }).join('');
+  return `<div class="box deal"><div class="bh">Your deal</div>
+    <div class="tot"><span>Value</span><span class="money">${money(t.value)}</span></div>
+    <div class="tot"><span>Your price</span><span class="money">${money(t.sub)}</span></div>
+    ${save > 0 ? `<div class="tot save"><span>You save</span><span>${money(save)}</span></div>` : ''}
+    <div class="planhd">Payment options</div>
+    <div class="plans2">${rows}</div>
+    <p class="note" style="margin:6px 0 0">Per-payment amounts include ${cur.shipReq && t.shipCost ? 'shipping and ' : ''}${cur.pay.taxable ? 'estimated sales tax (' + cur.pay.taxRate + '%)' : 'no sales tax'}.${PAY_PLANS.some(p => !plans.includes(p) && (!p.giftOnly || isGiftOrder(cur))) ? ' More payment plans unlock at higher totals.' : ''}</p></div>`;
+}
+$('#cartBody').addEventListener('click', e => {
+  const pb = e.target.closest('button[data-plan]'); if (pb) { cur.pay.plan = +pb.dataset.plan; persistCur(); renderCart(); return; }
+  const c = e.target.closest('.cline'); if (!c) return; const l = cur.items.find(i => i.id === c.dataset.line); if (l) optionsSheet({ line: l }); });
 $('#btnCartBack').onclick = () => { show('editor'); renderStep(); };
 $('#btnCartMore').onclick = () => { step = 0; show('editor'); renderStep(); };
 $('#btnCartNext').onclick = () => { step = 1; show('editor'); renderStep(); };
