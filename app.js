@@ -3,7 +3,7 @@
    derived from the PIN and is never exported. */
 'use strict';
 
-const APP_VERSION = '1.3.1';
+const APP_VERSION = '1.4.1';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const h = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -22,7 +22,9 @@ const LS = {
   del(k) { try { localStorage.removeItem(k); } catch (e) {} }
 };
 let ORDERS = LS.read('fo.orders', []);
-let SETTINGS = Object.assign({ taxRate: 9.5, event: '', customerType: CUSTOMER_TYPES[0], orderType: 'Regular', email: '', repName: '' }, LS.read('fo.settings', {}));
+let SETTINGS = Object.assign({ taxRate: 9.5, event: '', customerType: CUSTOMER_TYPES[0], orderType: 'Regular', email: '', repName: '', bonusLimit: 15, hideCpo: false }, LS.read('fo.settings', {}));
+const bonusLimit = () => Math.min(30, Math.max(0, +SETTINGS.bonusLimit || 0));
+function applyCustomerView() { document.body.classList.toggle('hidecpo', !!SETTINGS.hideCpo); const b = $('#btnEye'); if (b) b.classList.toggle('on', !!SETTINGS.hideCpo); }
 let PRICE_OVR = LS.read('fo.prices', {});      // { itemNumber: price }
 let CUSTOM_ITEMS = LS.read('fo.custom', []);   // [{n,name,p,c:'custom'}]
 const saveOrders = () => LS.write('fo.orders', ORDERS);
@@ -246,6 +248,8 @@ function plansFor(o, sub) { return PAY_PLANS.filter(p => (!p.giftOnly || isGiftO
 function totals(o) {
   const paid = o.items.filter(i => !i.free), free = o.items.filter(i => i.free);
   const sub = r2(paid.reduce((a, i) => a + (+i.qty || 0) * (+i.price || 0), 0));
+  const bonusValue = r2(free.reduce((a, i) => a + (+i.qty || 0) * (+i.retail || +i.price || 0), 0));
+  const bonusAllowed = r2(sub * bonusLimit() / 100); const bonusOver = bonusValue > bonusAllowed + 0.005;
   const value = r2(o.items.reduce((a, i) => a + (+i.qty || 0) * (+i.wps || +i.retail || +i.price || 0), 0));
   const cpoGross = r2(paid.reduce((a, i) => a + lineCpo(i), 0));
   const bonusPts = free.reduce((a, i) => a + (+i.qty || 0) * (+i.pts || 0), 0);
@@ -259,12 +263,12 @@ function totals(o) {
   const n = plan.n; const each = r2(total / n);
   const pays = Array.from({ length: n }, () => each); pays[n - 1] = r2(total - each * (n - 1));
   const sm = SHIP_METHODS.find(x => x.id === o.pay.shipMethod) || SHIP_METHODS[0];
-  return { sub, value, cpo, cpoGross, bonusPts, shipCost: sc, shipLabel: sm.label, fee, before, tax, total, n, pays };
+  return { sub, bonusValue, bonusAllowed, bonusOver, value, cpo, cpoGross, bonusPts, shipCost: sc, shipLabel: sm.label, fee, before, tax, total, n, pays };
 }
 function custName(o) { const n = (o.bill.first + ' ' + o.bill.last).trim(); return n || '(no name yet)'; }
 function itemLabel(i) {
   const d = i.b ? lineDesc(i) : Object.values(i.opts || {}).filter(Boolean).join(', ');
-  return [i.name, d, i.free ? 'FREE (bonus)' : '', i.note ? '“' + i.note + '”' : ''].filter(Boolean).join(' — ');
+  return [i.name, d, i.free ? 'BONUS (free)' : '', i.note ? '“' + i.note + '”' : ''].filter(Boolean).join(' — ');
 }
 
 /* ---------- home ---------- */
@@ -278,7 +282,7 @@ function renderHome() {
     const t = totals(o);
     return `<div class="card" data-id="${o.id}">
       <div class="row1"><div class="name">${h(custName(o))}</div><div class="amt">${money(t.total)}</div></div>
-      <div class="sub"><span class="badge ${o.status}">${lbl[o.status]}</span><span>${fmtDate(o.info.orderDate)}</span><span>· ${o.items.length} item${o.items.length === 1 ? '' : 's'}</span><span>· CPO ${money(t.cpo)}</span>${isGiftOrder(o) ? `<span>· ${h(o.info.orderType)}</span>` : ''}${o.cardLast4 ? `<span>· card ····${h(o.cardLast4)}${o.card ? '' : ' (wiped)'}</span>` : ''}${o.info.event ? `<span>· ${h(o.info.event)}</span>` : ''}</div>
+      <div class="sub"><span class="badge ${o.status}">${lbl[o.status]}</span><span>${fmtDate(o.info.orderDate)}</span><span>· ${o.items.length} item${o.items.length === 1 ? '' : 's'}</span><span class="cpo">· CPO ${money(t.cpo)}</span>${isGiftOrder(o) ? `<span>· ${h(o.info.orderType)}</span>` : ''}${o.cardLast4 ? `<span>· card ····${h(o.cardLast4)}${o.card ? '' : ' (wiped)'}</span>` : ''}${o.info.event ? `<span>· ${h(o.info.event)}</span>` : ''}</div>
     </div>`;
   }).join('');
   const pending = ORDERS.filter(o => o.status === 'ready').length;
@@ -352,7 +356,7 @@ function renderStep() {
 function updateTotal() {
   const t = totals(cur); $('#edTotal').textContent = cur.items.length ? 'Total ' + money(t.total) : '';
   const n = cur.items.reduce((s, i) => s + (+i.qty || 0), 0); $('#cartBadge').textContent = n || ''; $('#cartBadge').hidden = !n;
-  $('#cpoBand').innerHTML = `<div><small>Value</small>${money(t.value)}</div><div><small>Customer Pays</small>${money(t.sub)}</div><div><small>CPO</small>${money(t.cpo)}</div>${t.bonusPts ? `<div><small>Bonus pts</small>${t.bonusPts}</div>` : ''}`;
+  $('#cpoBand').innerHTML = `<div><small>Value</small>${money(t.value)}</div><div><small>Customer Pays</small>${money(t.sub)}</div><div class="cpo"><small>CPO</small>${money(t.cpo)}</div>${t.bonusValue ? `<div class="cpo ${t.bonusOver ? 'over' : ''}"><small>Bonus</small>${money(t.bonusValue)}<small>of ${money(t.bonusAllowed)}</small></div>` : ''}`;
 }
 function repriceLines() { cur.items.forEach(l => { if (l.manual || !l.b) return; const it = allProducts().find(p => p.key === l.key); if (it) l.price = unitPrice(it, cur); }); }
 
@@ -381,11 +385,26 @@ function renderItems() {
     if (tl.fam) { const f = tl.fam; const ps = famPrices(f); const lo = Math.min(...ps), hi = Math.max(...ps); const fi = FAMILIES.indexOf(f);
       return `<div class="ptile" data-open="fam:${fi}"><div class="pimg ${hasImg(f.img) ? '' : 'none'}" style="${spriteStyle(f.img, 140)}"></div><div class="pn">${h(f.name)}</div><div class="pi">${f.dims.map(d => h(d.label)).join(' · ')}</div><div class="pp">${lo === hi ? money(lo) : money(lo) + ' – ' + money(hi)}</div><button class="btn small addbtn">Choose options</button></div>`; }
     const p = tl.p; const up = unitPrice(p, cur);
-    return `<div class="ptile" data-open="key:${h(p.key)}"><div class="pimg ${hasImg(p.key) ? '' : 'none'}" style="${spriteStyle(p.key, 140)}"></div><div class="pn">${h(p.name)}</div><div class="pi">#${h(p.b)}${p.col ? ' · ' + p.col.split('').map(c => COLOR_NAMES[c]).join('/') : ''}${p.na ? '<br><span style="color:var(--red)">not in Cutco app, use Special Instructions</span>' : ''}<br>CPO ${money(p.cpo)} · ${p.pts} pts${p.e ? ' <i title="estimated">(est.)</i>' : ''}</div><div class="pp">${money(up)}${up !== p.p ? ` <small style="color:var(--muted);font-weight:400">retail ${money(p.p)}</small>` : ''}</div><button class="btn small addbtn">${p.col || p.out || p.ch || (p.o || []).length ? 'Choose options' : 'Add to Order'}</button></div>`;
+    return `<div class="ptile" data-open="key:${h(p.key)}"><div class="pimg ${hasImg(p.key) ? '' : 'none'}" style="${spriteStyle(p.key, 140)}"></div><div class="pn">${h(p.name)}</div><div class="pi">#${h(p.b)}${p.col ? ' · ' + p.col.split('').map(c => COLOR_NAMES[c]).join('/') : ''}${p.na ? '<br><span style="color:var(--red)">not in Cutco app, use Special Instructions</span>' : ''}<span class="cpo"><br>CPO ${money(p.cpo)} · ${p.pts} pts${p.e ? ' <i title="estimated">(est.)</i>' : ''}</span></div><div class="pp">${money(up)}${up !== p.p ? `<small class="was">retail ${money(p.p)}</small>` : ''}</div><button class="btn small addbtn">${p.col || p.out || p.ch || (p.o || []).length ? 'Choose options' : 'Add to Order'}</button></div>`;
   }).join('') + `</div>` : `<p class="empty">Nothing found.<br>Use <b>+ Custom</b> to add an item that is not in the list.</p>`}`;
 }
 function newLine(p, st) {
   return { id: uid(), key: p.key, b: p.b, sfx: p.sfx, col: p.col, out: p.out, ch: p.ch, o: p.o || [], gc: p.gc, name: p.name, qty: st.qty, price: st.price != null ? st.price : unitPrice(p, cur), retail: p.p, wps: p.wps || 0, cpo: p.cpo, pts: p.pts, opts: Object.assign({}, st.opts), note: st.note || '', free: !!st.free, manual: st.price != null };
+}
+/* Bonus limit: retail value of bonus items may not exceed bonusLimit% of what the customer pays. */
+function bonusMath(p, st, line) {
+  const others = cur.items.filter(l => l !== line);
+  const paid = r2(others.filter(l => !l.free).reduce((a, l) => a + (+l.qty || 0) * (+l.price || 0), 0));
+  const bonus = r2(others.filter(l => l.free).reduce((a, l) => a + (+l.qty || 0) * (+l.retail || +l.price || 0), 0));
+  const mine = r2((+st.qty || 0) * (+p.p || 0));
+  return { paid, bonus, mine, allowed: r2(paid * bonusLimit() / 100) };
+}
+function bonusFits(p, st, line) { const m = bonusMath(p, st, line); return m.bonus + m.mine <= m.allowed + 0.005; }
+function bonusNote(p, st, line, over) {
+  const m = bonusMath(p, st, line); const lim = bonusLimit();
+  if (!lim) return 'Bonus limit is 0% (Settings), so no bonus items are allowed.';
+  const room = r2(m.allowed - m.bonus);
+  return (over ? `Over the bonus limit. ` : '') + `Bonus limit ${lim}% of ${money(m.paid)} paid = ${money(m.allowed)}` + (m.bonus ? ` (${money(m.bonus)} already used)` : '') + `. Room left: ${money(Math.max(0, room))}; this item is ${money(m.mine)}.`;
 }
 /* Options sheet: spec = { fam } | { key } | { line } (edit). */
 function optionsSheet(spec) {
@@ -407,7 +426,7 @@ function optionsSheet(spec) {
     (p.o || []).forEach(g => { if (!st.opts[g]) st.opts[g] = OPTION_GROUPS[g].choices[0]; });
     const up = st.price != null ? st.price : unitPrice(p, cur);
     const sel = (attr, label, choices, val) => `<div class="field"><label>${h(label)}</label><select data-o="${attr}">${choices.map(([v, t]) => `<option value="${h(v)}" ${String(val) === String(v) ? 'selected' : ''}>${h(t)}</option>`).join('')}</select></div>`;
-    let html = `<div class="sheethead"><div class="pimg ${hasImg(p.key) ? '' : 'none'}" style="${spriteStyle(p.key, 110)}"></div><div><h3>${h(fam ? fam.name : p.name)}</h3><div class="note" style="margin:0">#<b id="shNo"></b> · CPO ${money(p.cpo)} · ${p.pts} pts${p.e ? ' (est.)' : ''}${p.wps ? '<br>Value if purchased separately ' + money(p.wps) : ''}</div></div></div>`;
+    let html = `<div class="sheethead"><div class="pimg ${hasImg(p.key) ? '' : 'none'}" style="${spriteStyle(p.key, 110)}"></div><div><h3>${h(fam ? fam.name : p.name)}</h3><div class="note" style="margin:0">#<b id="shNo"></b><span class="cpo"> · CPO ${money(p.cpo)} · ${p.pts} pts${p.e ? ' (est.)' : ''}</span>${p.wps ? '<br>Value ' + money(p.wps) : ''}</div></div></div>`;
     if (fam) html += fam.dims.map((d, i) => sel('dim' + i, d.label, d.choices.map(c => [c, c]), st.dims[i])).join('');
     if (fam) html += `<p class="note" style="margin:-2px 0 8px">${h(p.name)}</p>`;
     if (p.col) html += sel('color', 'Handle Color', p.col.split('').map(c => [c, COLOR_NAMES[c]]), st.opts.color);
@@ -417,7 +436,8 @@ function optionsSheet(spec) {
     html += `<div class="shrow"><div class="qty"><button data-q="-1">−</button><span id="shQty">${st.qty}</span><button data-q="1">+</button></div>
       <div class="field" style="flex:1;margin:0"><label>Unit price</label><input type="number" inputmode="decimal" step="0.01" id="shPrice" value="${up}"></div></div>
       ${up !== p.p ? `<p class="note">Retail ${money(p.p)}${isGiftOrder(cur) && p.g != null ? ' · gift price ' + money(p.g) : ''}</p>` : ''}
-      <label class="check"><input type="checkbox" id="shFree" ${st.free ? 'checked' : ''}> Free (bonus item — takes ${p.pts} pts off CPO)</label>
+      <label class="check"><input type="checkbox" id="shFree" ${st.free ? 'checked' : ''}> <span>Bonus (free to the customer)<span class="cpo"> — takes ${p.pts} pts off CPO</span></span></label>
+      <p class="note cpo" style="margin:-4px 0 8px">${bonusNote(p, st, spec.line)}</p>
       <div class="field"><label>Note</label><input id="shNote" value="${h(st.note)}" placeholder="Engraving, special request…"></div>
       <div class="acts">${spec.line ? '<button class="btn danger" id="shRemove">Remove</button>' : ''}<button class="btn" id="shCancel">Cancel</button><button class="btn primary" id="shOk">${spec.line ? 'Save' : 'Add to Order'} · ${money((st.free ? 0 : up) * st.qty)}</button></div>`;
     openSheet(html);
@@ -425,12 +445,13 @@ function optionsSheet(spec) {
     const sh = $('#sheet');
     sh.onchange = e => { const t = e.target; if (!t.dataset.o) return; const k = t.dataset.o;
       if (k.startsWith('dim')) st.dims[+k.slice(3)] = t.value; else if (k === 'cherry') st.opts.cherry = !!t.value; else st.opts[k] = t.value; render(); };
-    sh.oninput = e => { if (e.target.id === 'shPrice') { st.price = e.target.value === '' ? null : +e.target.value; $('#shOk').textContent = (spec.line ? 'Save' : 'Add to Order') + ' · ' + money((st.free ? 0 : (st.price != null ? st.price : unitPrice(p, cur))) * st.qty); } if (e.target.id === 'shNote') st.note = e.target.value; if (e.target.id === 'shFree') { st.free = e.target.checked; render(); } };
+    sh.oninput = e => { if (e.target.id === 'shPrice') { st.price = e.target.value === '' ? null : +e.target.value; $('#shOk').textContent = (spec.line ? 'Save' : 'Add to Order') + ' · ' + money((st.free ? 0 : (st.price != null ? st.price : unitPrice(p, cur))) * st.qty); } if (e.target.id === 'shNote') st.note = e.target.value; if (e.target.id === 'shFree') { if (e.target.checked && !bonusFits(p, st, spec.line)) { e.target.checked = false; toast(bonusNote(p, st, spec.line, true)); return; } st.free = e.target.checked; render(); } };
     sh.onclick = e => { const b = e.target.closest('button'); if (!b) return;
       if (b.dataset.q) { st.qty = Math.max(1, st.qty + (+b.dataset.q)); render(); return; }
       if (b.id === 'shCancel') { closeSheet(); return; }
       if (b.id === 'shRemove') { cur.items = cur.items.filter(l => l !== spec.line); closeSheet(); afterCartChange(); toast('Removed'); return; }
       if (b.id === 'shOk') {
+        if (st.free && !bonusFits(p, st, spec.line)) { toast(bonusNote(p, st, spec.line, true)); return; }
         if (st.price != null && st.price === unitPrice(p, cur)) st.price = null;
         if (spec.line) { const l = spec.line; Object.assign(l, newLine(p, st), { id: l.id }); }
         else cur.items.push(newLine(p, st));
@@ -466,10 +487,10 @@ function renderCart() {
   const t = totals(cur);
   $('#cartBody').innerHTML = (cur.items.length ? cur.items.map(i => { const q = +i.qty || 0; return `<div class="cline ${i.free ? 'free' : ''}" data-line="${i.id}">
       <div class="limg ${hasImg(i.key) ? '' : 'none'}" style="${spriteStyle(i.key, 56)}"></div>
-      <div class="ci"><div class="cn">${h(i.name)}</div><div class="cd">#${h(itemNo(i))}${i.b ? (lineDesc(i) ? ' · ' + h(lineDesc(i)) : '') : ''}${i.note ? ' · “' + h(i.note) + '”' : ''}<br>${q} × ${i.free ? 'FREE' : money(i.price)} · CPO ${money(lineCpo(i))}${i.free ? ' · −' + q * i.pts + ' pts' : ''}</div></div>
+      <div class="ci"><div class="cn">${h(i.name)}</div><div class="cd">#${h(itemNo(i))}${i.b ? (lineDesc(i) ? ' · ' + h(lineDesc(i)) : '') : ''}${i.note ? ' · “' + h(i.note) + '”' : ''}<br>${q} × ${i.free ? 'BONUS' : money(i.price)}<span class="cpo"> · CPO ${money(lineCpo(i))}${i.free ? ' · −' + q * i.pts + ' pts' : ''}</span></div></div>
       <div class="lp">${i.free ? '$0.00' : money(q * i.price)}</div><div class="chev">›</div></div>`; }).join('')
     : '<p class="empty">Nothing in the cart yet.</p>')
-    + `<div class="box" style="margin-top:12px"><div class="tot"><span>Value (if purchased separately)</span><span class="money">${money(t.value)}</span></div><div class="tot"><span>Customer Pays</span><span class="money">${money(t.sub)}</span></div>${t.bonusPts ? `<div class="tot"><span>Bonus points given</span><span>${t.bonusPts} pts</span></div>` : ''}<div class="tot grand"><span>CPO</span><span class="money">${money(t.cpo)}</span></div></div>
+    + `<div class="box" style="margin-top:12px"><div class="tot"><span>Value</span><span class="money">${money(t.value)}</span></div><div class="tot"><span>Customer Pays</span><span class="money">${money(t.sub)}</span></div>${t.bonusValue ? `<div class="tot cpo ${t.bonusOver ? 'overtxt' : ''}"><span>Bonus items (limit ${bonusLimit()}% = ${money(t.bonusAllowed)})</span><span>${money(t.bonusValue)}</span></div>` : ''}${t.bonusOver ? `<p class="warn cpo" style="margin:6px 0">Bonus items are over the ${bonusLimit()}% limit. Remove a bonus item or add paid items.</p>` : ''}${t.bonusPts ? `<div class="tot cpo"><span>Bonus points given</span><span>${t.bonusPts} pts</span></div>` : ''}<div class="tot grand cpo"><span>CPO</span><span class="money">${money(t.cpo)}</span></div></div>
     <p class="note">Tap an item to change its options, quantity, price or note, or to remove it.</p>`;
   $('#cartCount').textContent = cur.items.length ? `(${cur.items.reduce((n, i) => n + (+i.qty || 0), 0)})` : '';
 }
@@ -478,6 +499,7 @@ $('#btnCartBack').onclick = () => { show('editor'); renderStep(); };
 $('#btnCartMore').onclick = () => { step = 0; show('editor'); renderStep(); };
 $('#btnCartNext').onclick = () => { step = 1; show('editor'); renderStep(); };
 $('#btnCart').onclick = showCart;
+$('#btnEye').onclick = () => { SETTINGS.hideCpo = !SETTINGS.hideCpo; saveSettings(); applyCustomerView(); toast(SETTINGS.hideCpo ? 'Customer view: CPO hidden' : 'CPO shown'); };
 
 /* --- step 2: customer --- */
 const F = (label, path, opt = {}) => {
@@ -574,13 +596,14 @@ function summaryHtml(o, withCopy) {
     ${addrBlock('Billing', o.bill, true)}
     ${o.shipReq ? (o.shipSame ? `<div class="box"><div class="bh">Shipping</div><div class="kv"><div class="v">Same as billing</div></div></div>` : addrBlock('Shipping', o.ship, false)) : `<div class="box"><div class="bh">Shipping</div><div class="kv"><div class="v">Not required</div></div></div>`}
     <div class="box"><div class="bh">Order items (${o.items.length})</div>
-      ${o.items.map(i => `<div class="kv"><div class="k">${i.qty} × #${h(itemNo(i))}</div><div class="v">${h(itemLabel(i))}<br><span style="color:var(--orange);font-weight:600">${i.free ? 'FREE' : money(i.qty * i.price)}</span>${i.qty > 1 && !i.free ? ` <small style="color:var(--muted)">(${money(i.price)} each)</small>` : ''} <small style="color:var(--muted)">· CPO ${money(lineCpo(i))}${i.free ? ' · −' + (i.qty * i.pts) + ' pts' : ''}</small></div>${withCopy ? `<button class="copybtn" data-copy="${h(itemNo(i))}">Copy #</button>` : ''}</div>`).join('') || '<p class="note">No items yet.</p>'}</div>
-    <div class="box"><div class="bh">Value / CPO</div>
-      <div class="tot"><span>Value (if purchased separately)</span><span class="money">${money(t.value)}</span></div>
+      ${o.items.map(i => `<div class="kv"><div class="k">${i.qty} × #${h(itemNo(i))}</div><div class="v">${h(itemLabel(i))}<br><span style="color:var(--orange);font-weight:600">${i.free ? 'BONUS' : money(i.qty * i.price)}</span>${i.qty > 1 && !i.free ? ` <small style="color:var(--muted)">(${money(i.price)} each)</small>` : ''} <small class="cpo" style="color:var(--muted)">· CPO ${money(lineCpo(i))}${i.free ? ' · −' + (i.qty * i.pts) + ' pts' : ''}</small></div>${withCopy ? `<button class="copybtn" data-copy="${h(itemNo(i))}">Copy #</button>` : ''}</div>`).join('') || '<p class="note">No items yet.</p>'}</div>
+    <div class="box"><div class="bh">Value<span class="cpo"> / CPO</span></div>
+      <div class="tot"><span>Value</span><span class="money">${money(t.value)}</span></div>
       <div class="tot"><span>Customer Pays</span><span class="money">${money(t.sub)}</span></div>
-      ${t.bonusPts ? `<div class="tot"><span>CPO before bonus</span><span class="money">${money(t.cpoGross)}</span></div><div class="tot"><span>Bonus points given</span><span>${t.bonusPts} pts</span></div>` : ''}
-      <div class="tot grand"><span>CPO</span><span class="money">${money(t.cpo)}</span></div>
-      ${o.items.some(i => i.b && CATALOG.find(c => keyOf(c) === i.key && c.e)) ? '<p class="note" style="margin:6px 0 0">Some CPO / point values are estimates (no 2026 source yet).</p>' : ''}</div>
+      ${t.bonusValue ? `<div class="tot cpo ${t.bonusOver ? 'overtxt' : ''}"><span>Bonus items (limit ${bonusLimit()}% = ${money(t.bonusAllowed)})</span><span>${money(t.bonusValue)}</span></div>` : ''}
+      ${t.bonusPts ? `<div class="tot cpo"><span>CPO before bonus</span><span class="money">${money(t.cpoGross)}</span></div><div class="tot cpo"><span>Bonus points given</span><span>${t.bonusPts} pts</span></div>` : ''}
+      <div class="tot grand cpo"><span>CPO</span><span class="money">${money(t.cpo)}</span></div>
+      ${o.items.some(i => i.b && CATALOG.find(c => keyOf(c) === i.key && c.e)) ? '<p class="note cpo" style="margin:6px 0 0">Some CPO / point values are estimates (no 2026 source yet).</p>' : ''}</div>
     <div class="box"><div class="bh">Payment &amp; shipping</div>
       ${kv('Shipping Method', o.shipReq ? t.shipLabel + (t.shipCost ? ' (' + money(t.shipCost) + ')' : ' (Included)') : 'None', 'x')}${kv('Payment Method', o.pay.method, 'x')}${kv('Taxable', o.pay.taxable ? 'Taxable (' + o.pay.taxRate + '%' + (o.pay.taxSource === 'exact' ? ', exact' : ', estimate') + ')' : 'Tax Exempt', 'x')}${o.pay.taxable && o.pay.taxJuris ? kv('Tax area', o.pay.taxJuris, 'x') : ''}${kv('Payment Plan', t.n + ' payment' + (t.n > 1 ? 's' : ''), 'x')}${kv('Special instr.', o.pay.special)}${kv('Gift message', o.pay.gift)}${kv('My notes', o.info.notes)}</div>
     <div class="box"><div class="bh">Order totals</div>
@@ -724,8 +747,8 @@ function orderText(o) {
   L.push(`Customer Type: ${o.info.customerType} | Order Type: ${o.info.orderType} | Marketing: ${o.info.marketing || 'None'} | ROR: ${o.info.ror} | Language: ${o.bill.lang}`);
   L.push('BILLING:\n  ' + addr(o.bill));
   L.push('SHIPPING: ' + (!o.shipReq ? 'not required' : o.shipSame ? 'same as billing' : '\n  ' + addr(o.ship)));
-  L.push('ITEMS:\n' + o.items.map(i => `  ${i.qty} x #${itemNo(i)} ${itemLabel(i)} — ${i.free ? 'FREE' : money(i.qty * i.price)} (CPO ${money(lineCpo(i))})`).join('\n'));
-  L.push(`VALUE (if purchased separately) ${money(t.value)} | CUSTOMER PAYS ${money(t.sub)} | CPO ${money(t.cpo)}` + (t.bonusPts ? ` (after ${t.bonusPts} bonus pts)` : ''));
+  L.push('ITEMS:\n' + o.items.map(i => `  ${i.qty} x #${itemNo(i)} ${itemLabel(i)} — ${i.free ? 'BONUS' : money(i.qty * i.price)} (CPO ${money(lineCpo(i))})`).join('\n'));
+  L.push(`VALUE ${money(t.value)} | CUSTOMER PAYS ${money(t.sub)} | CPO ${money(t.cpo)}` + (t.bonusPts ? ` (after ${t.bonusPts} bonus pts; bonus items ${money(t.bonusValue)} of ${money(t.bonusAllowed)} allowed)` : ''));
   L.push(`PAYMENT: ${o.pay.method} | ${t.n} payment${t.n > 1 ? 's of ' + money(t.pays[0]) : ''} | Shipping: ${o.shipReq ? t.shipLabel : 'none'} | ${o.pay.taxable ? 'Taxable ' + o.pay.taxRate + '%' + (o.pay.taxSource === 'exact' ? ' (exact)' : ' (est.)') : 'Tax exempt'}` + (o.cardLast4 ? ` | Card ending ${o.cardLast4} (number is only on the phone)` : ''));
   L.push(`TOTALS: subtotal ${money(t.sub)}, shipping ${money(t.shipCost)}, admin fee ${money(t.fee)}, tax (est.) ${money(t.tax)}, TOTAL ${money(t.total)}`);
   if (o.pay.special) L.push('Special instructions: ' + o.pay.special);
@@ -752,6 +775,9 @@ function renderSettings() {
     <div class="field"><label>Customer Type</label><select data-s="customerType">${CUSTOMER_TYPES.map(c => `<option ${SETTINGS.customerType === c ? 'selected' : ''}>${h(c)}</option>`).join('')}</select></div>
     <div class="field"><label>Order Type</label><select data-s="orderType">${ORDER_TYPES.map(c => `<option ${SETTINGS.orderType === c ? 'selected' : ''}>${h(c)}</option>`).join('')}</select></div>
     <div class="field"><label>Email orders to</label><input type="email" data-s="email" value="${h(SETTINGS.email)}" placeholder="your email" autocapitalize="none"></div>
+    <h2 class="sec">Customer-facing</h2>
+    <div class="st-row"><div class="l">Bonus limit<small>Bonus (free) items can't add up to more than this share of what the customer pays. At 10%, $1,000 of paid items allows $100 of bonus items.</small><div class="slider"><input type="range" min="0" max="30" step="1" data-s="bonusLimit" value="${h(bonusLimit())}"><b id="bonusLbl">${bonusLimit()}%</b></div></div></div>
+    <label class="check st-row"><input type="checkbox" data-s="hideCpo" ${SETTINGS.hideCpo ? 'checked' : ''}> <span class="l">Customer view<small>Hide CPO and point values everywhere. The eye button on the order screen toggles this too.</small></span></label>
     <h2 class="sec">Security</h2>
     <button class="btn wide" id="btnChangePin">Change PIN</button>
     <button class="btn wide" id="btnLockNow">Lock now</button>
@@ -777,7 +803,7 @@ function catListHtml() {
 $('#btnStBack').onclick = () => { saveSettings(); renderHome(); show('home'); };
 $('#stBody').addEventListener('input', e => {
   const t = e.target;
-  if (t.dataset.s) { SETTINGS[t.dataset.s] = t.type === 'number' ? (+t.value || 0) : t.value; saveSettings(); return; }
+  if (t.dataset.s) { SETTINGS[t.dataset.s] = t.type === 'checkbox' ? t.checked : (t.type === 'number' || t.type === 'range') ? (+t.value || 0) : t.value; saveSettings(); if (t.dataset.s === 'bonusLimit') { $('#bonusLbl').textContent = bonusLimit() + '%'; } if (t.dataset.s === 'hideCpo') applyCustomerView(); return; }
   if (t.id === 'catSearch') { catQuery = t.value; $('#catList').innerHTML = catListHtml(); return; }
   if (t.dataset.price) {
     const n = t.dataset.price, v = +t.value || 0; const base = CATALOG.find(c => keyOf(c) === n);
@@ -836,5 +862,6 @@ function changePinSheet() {
 if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); }
 CUSTOM_ITEMS.forEach(c => { if (c.n && !c.b) c.b = c.n; });
 maybeAutoRefreshTax();
+applyCustomerView();
 showLock();
 window.__fo = { get ORDERS() { return ORDERS; }, get cur() { return cur; }, SETTINGS, totals, newOrder, orderText, estimateRate, lookupExactRate, itemNo, allProducts };

@@ -1,7 +1,7 @@
 /* Offline cache so the app opens with no signal. App files are network-first so
    updates show up on the next load with signal. Bump VERSION on each release. */
 importScripts('imglist.js');
-const VERSION = 'orders-v11';
+const VERSION = 'orders-v13';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'catalog.js', 'taxrates.js', 'imglist.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
@@ -19,5 +19,5 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
   const put = res => { if (res && res.ok) caches.open(VERSION).then(c => c.put(e.request, res.clone())); return res; };
   if (url.pathname.includes('/sprites/')) { e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(put))); return; }
-  e.respondWith(fetch(e.request).then(put).catch(() => caches.match(e.request, { ignoreSearch: true })));
+  e.respondWith(fetch(e.request, { cache: 'no-cache' }).then(put).catch(() => caches.match(e.request, { ignoreSearch: true })));
 });

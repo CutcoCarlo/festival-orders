@@ -25,6 +25,8 @@ input, select, textarea { font: inherit; }
 .btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
 .btn.big { padding: 12px 20px; font-size: 17px; flex: 1; }
 .btn.icon { width: 40px; padding: 6px 0; font-size: 22px; line-height: 1; text-align: center; }
+.bar .btn.icon + .btn.icon { margin-left: -2px; }
+#btnEye, #btnCart { width: 38px; font-size: 20px; }
 .btn.danger { color: var(--red); border-color: #f1c8c3; }
 .btn.small { padding: 5px 10px; font-size: 14px; }
 .btn.wide { width: 100%; display: block; margin-top: 8px; }
@@ -205,3 +207,15 @@ h2.sec:first-child { margin-top: 4px; }
 .sheethead .pimg.none { display: none; }
 .sheethead h3 { margin: 0 0 4px; font-size: 17px; }
 .shrow { display: flex; align-items: center; gap: 10px; margin: 4px 0 8px; }
+
+/* customer view + discount */
+body.hidecpo .cpo { display: none !important; }
+#btnEye.on { background: var(--blue); color: #fff; border-color: var(--blue); }
+.pp .was { display: block; color: var(--muted); font-weight: 400; font-size: 12px; }
+.cpoband div.over { color: #ffb4a8; }
+.tot.overtxt { color: var(--red); font-weight: 700; }
+.slider { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.slider input[type=range] { flex: 1; accent-color: var(--blue); }
+.slider b { min-width: 64px; text-align: right; color: var(--orange); }
+label.check.st-row { cursor: pointer; }
+label.check.st-row .l small { display: block; color: var(--muted); font-size: 12px; }
