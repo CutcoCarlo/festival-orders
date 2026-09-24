@@ -1,7 +1,7 @@
 /* Offline cache so the app opens with no signal. App files are network-first so
    updates show up on the next load with signal. Bump VERSION on each release. */
 importScripts('imglist.js');
-const VERSION = 'orders-v15';
+const VERSION = 'orders-v16';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'catalog.js', 'taxrates.js', 'imglist.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 

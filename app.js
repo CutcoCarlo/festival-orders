@@ -3,7 +3,7 @@
    derived from the PIN and is never exported. */
 'use strict';
 
-const APP_VERSION = '1.5.1';
+const APP_VERSION = '1.5.2';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const h = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -439,7 +439,7 @@ function optionsSheet(spec) {
     html += `<div class="shrow"><div class="qty"><button data-q="-1">−</button><span id="shQty">${st.qty}</span><button data-q="1">+</button></div>
       <div class="field" style="flex:1;margin:0"><label>Unit price</label><input type="number" inputmode="decimal" step="0.01" id="shPrice" value="${up}"></div></div>
       ${up !== p.p ? `<p class="note">Retail ${money(p.p)}${isGiftOrder(cur) && p.g != null ? ' · gift price ' + money(p.g) : ''}</p>` : ''}
-      <label class="check"><input type="checkbox" id="shFree" ${st.free ? 'checked' : ''}> <span>Bonus (free to the customer)<span class="cpo"> — takes ${p.pts} pts off CPO</span></span></label>
+      <label class="check"><input type="checkbox" id="shFree" ${st.free ? 'checked' : ''}> <span>Bonus<span class="cpo"> — takes ${p.pts} pts off CPO</span></span></label>
       <p class="note cpo" style="margin:-4px 0 8px">${bonusNote(p, st, spec.line)}</p>
       <div class="field"><label>Note</label><input id="shNote" value="${h(st.note)}" placeholder="Engraving, special request…"></div>
       <div class="acts">${spec.line ? '<button class="btn danger" id="shRemove">Remove</button>' : ''}<button class="btn" id="shCancel">Cancel</button><button class="btn primary" id="shOk">${spec.line ? 'Save' : 'Add to Order'} · ${money((st.free ? 0 : up) * st.qty)}</button></div>`;
