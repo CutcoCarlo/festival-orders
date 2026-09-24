@@ -3,7 +3,7 @@
    derived from the PIN and is never exported. */
 'use strict';
 
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.5.1';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const h = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -281,14 +281,17 @@ function renderHome() {
   $('#orderList').innerHTML = list.map(o => {
     const t = totals(o);
     return `<div class="card" data-id="${o.id}">
-      <div class="row1"><div class="name">${h(custName(o))}</div><div class="amt">${money(t.total)}</div></div>
+      <div class="row1"><div class="name">${h(custName(o))}</div><div class="amt">${money(t.total)}</div><button class="btn small ${o.status === 'entered' ? '' : 'primary'}" data-edit="${o.id}">${o.status === 'entered' ? 'View' : 'Edit'}</button></div>
       <div class="sub"><span class="badge ${o.status}">${lbl[o.status]}</span><span>${fmtDate(o.info.orderDate)}</span><span>· ${o.items.length} item${o.items.length === 1 ? '' : 's'}</span><span class="cpo">· CPO ${money(t.cpo)}</span>${isGiftOrder(o) ? `<span>· ${h(o.info.orderType)}</span>` : ''}${o.cardLast4 ? `<span>· card ····${h(o.cardLast4)}${o.card ? '' : ' (wiped)'}</span>` : ''}${o.info.event ? `<span>· ${h(o.info.event)}</span>` : ''}</div>
     </div>`;
   }).join('');
   const pending = ORDERS.filter(o => o.status === 'ready').length;
   $('#btnShareAll').textContent = pending ? `Email pending (${pending})` : 'Email pending';
 }
-$('#orderList').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) openDetail(c.dataset.id); });
+$('#orderList').addEventListener('click', e => {
+  const b = e.target.closest('button[data-edit]');
+  if (b) { const o = ORDERS.find(x => x.id === b.dataset.edit); if (!o) return; if (o.status === 'entered') openDetail(o.id); else openEditor(o, false); return; }
+  const c = e.target.closest('.card'); if (c) openDetail(c.dataset.id); });
 $('#btnNew').onclick = () => { openEditor(newOrder(), true); };
 $('#btnSettings').onclick = () => { renderSettings(); show('settings'); };
 $('#btnShareAll').onclick = () => {
@@ -541,7 +544,6 @@ function renderCustomer() {
     ${F('Customer Type', 'info.customerType', { select: CUSTOMER_TYPES })}
     ${F('Order Type', 'info.orderType', { select: ORDER_TYPES })}
     ${F('Marketing', 'info.marketing', { ph: 'None' })}
-    <div class="segrow"><div class="lbl">Evaluate order for ROR</div>${SEG('info.ror', ['Yes', 'No'])}</div>
     ${F('Order Date', 'info.orderDate', { type: 'date' })}
     <h2 class="sec">Billing information</h2>
     ${addressFields('bill', true)}
@@ -610,7 +612,7 @@ function summaryHtml(o, withCopy) {
   const addrBlock = (title, a, withEmail) => `<div class="box"><div class="bh">${title}<span class="spacer"></span>${cp([a.first + ' ' + a.last, addr(a), a.phone, a.alt, withEmail ? a.email : ''].filter(Boolean).join('\n'))}</div>
     ${kv('First Name', a.first)}${kv('Last Name', a.last)}${kv('Company', a.company)}${kv('Address 1', a.addr1)}${kv('Address 2', a.addr2)}${kv('City', a.city)}${kv('State', a.state)}${kv('Zip', a.zip)}${kv('Phone', a.phone)}${kv('Alt. Phone', a.alt)}${withEmail ? kv('Email', a.email) : ''}</div>`;
   return `<div class="box"><div class="bh">Order information</div>
-      ${kv('Order Date', fmtDate(o.info.orderDate), 'x')}${kv('Event', o.info.event)}${kv('Customer Type', o.info.customerType, 'x')}${kv('Order Type', o.info.orderType + (isGiftOrder(o) ? ' (gift pricing)' : ''), 'x')}${kv('Marketing', o.info.marketing, 'x')}${kv('Evaluate for ROR', o.info.ror, 'x')}${kv('Language', o.bill.lang, 'x')}</div>
+      ${kv('Order Date', fmtDate(o.info.orderDate), 'x')}${kv('Event', o.info.event)}${kv('Customer Type', o.info.customerType, 'x')}${kv('Order Type', o.info.orderType + (isGiftOrder(o) ? ' (gift pricing)' : ''), 'x')}${kv('Marketing', o.info.marketing, 'x')}${kv('Language', o.bill.lang, 'x')}</div>
     ${addrBlock('Billing', o.bill, true)}
     ${o.shipReq ? (o.shipSame ? `<div class="box"><div class="bh">Shipping</div><div class="kv"><div class="v">Same as billing</div></div></div>` : addrBlock('Shipping', o.ship, false)) : `<div class="box"><div class="bh">Shipping</div><div class="kv"><div class="v">Not required</div></div></div>`}
     <div class="box"><div class="bh">Order items (${o.items.length})</div>
@@ -762,7 +764,7 @@ function orderText(o) {
   const L = [];
   L.push(`ORDER: ${custName(o)} — ${fmtDate(o.info.orderDate)} — ${money(t.total)} [${o.status === 'entered' ? 'ENTERED' : o.status === 'ready' ? 'TO ENTER' : 'IN PROGRESS'}]`);
   if (o.info.event) L.push('Event: ' + o.info.event);
-  L.push(`Customer Type: ${o.info.customerType} | Order Type: ${o.info.orderType} | Marketing: ${o.info.marketing || 'None'} | ROR: ${o.info.ror} | Language: ${o.bill.lang}`);
+  L.push(`Customer Type: ${o.info.customerType} | Order Type: ${o.info.orderType} | Marketing: ${o.info.marketing || 'None'} | Language: ${o.bill.lang}`);
   L.push('BILLING:\n  ' + addr(o.bill));
   L.push('SHIPPING: ' + (!o.shipReq ? 'not required' : o.shipSame ? 'same as billing' : '\n  ' + addr(o.ship)));
   L.push('ITEMS:\n' + o.items.map(i => `  ${i.qty} x #${itemNo(i)} ${itemLabel(i)} — ${i.free ? 'BONUS' : money(i.qty * i.price)} (CPO ${money(lineCpo(i))})`).join('\n'));
