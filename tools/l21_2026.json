@@ -4,154 +4,176 @@
 "cpo": 1544,
 "pts": 1190,
 "col": "C/W/R",
-"desc": "C/W/R Homemaker + 8 Set with Block w/ Petite Chef 1,983"
+"desc": "C/W/R Homemaker + 8 Set with Block w/ Petite Chef 1,983",
+"wps": 1983
 },
 "1818C": {
 "p": 1730,
 "cpo": 1558,
 "pts": 1210,
 "col": "C/W",
-"desc": "C/W Homemaker + 8 Set with Block w/ French Chef 2,000"
+"desc": "C/W Homemaker + 8 Set with Block w/ French Chef 2,000",
+"wps": 2000
 },
 "2001C": {
 "p": 1343,
 "cpo": 1213,
 "pts": 925,
 "col": "C/W/R",
-"desc": "C/W/R Homemaker Set with Block w/ Petite Chef 1,535"
+"desc": "C/W/R Homemaker Set with Block w/ Petite Chef 1,535",
+"wps": 1535
 },
 "1801C": {
 "p": 1358,
 "cpo": 1227,
 "pts": 945,
 "col": "C/W",
-"desc": "C/W Homemaker Set with Block w/ French Chef 1,552"
+"desc": "C/W Homemaker Set with Block w/ French Chef 1,552",
+"wps": 1552
 },
 "2000C": {
 "p": 1228,
 "cpo": 1112,
 "pts": 815,
 "col": "C/W/R",
-"desc": "C/W/R Homemaker Set with Trays w/ Petite Chef 1,403"
+"desc": "C/W/R Homemaker Set with Trays w/ Petite Chef 1,403",
+"wps": 1403
 },
 "1800C": {
 "p": 1243,
 "cpo": 1125,
 "pts": 835,
 "col": "C/W",
-"desc": "C/W Homemaker Set with Trays w/ French Chef 1,420"
+"desc": "C/W Homemaker Set with Trays w/ French Chef 1,420",
+"wps": 1420
 },
 "2008C": {
 "p": 1236,
 "cpo": 1120,
 "pts": 840,
 "col": "C/W/R",
-"desc": "C/W/R Galley + 6 Set with Block 1,404"
+"desc": "C/W/R Galley + 6 Set with Block 1,404",
+"wps": 1404
 },
 "2007C": {
 "p": 945,
 "cpo": 852,
 "pts": 645,
 "col": "C/W/R",
-"desc": "C/W/R Galley Set with Block 1,068"
+"desc": "C/W/R Galley Set with Block 1,068",
+"wps": 1068
 },
 "1945C": {
 "p": 963,
 "cpo": 856,
 "pts": 630,
 "col": "C/W/R",
-"desc": "C/W/R Essentials + 5 Set with Block 1,070"
+"desc": "C/W/R Essentials + 5 Set with Block 1,070",
+"wps": 1070
 },
 "1845C": {
 "p": 711,
 "cpo": 638,
 "pts": 465,
 "col": "C/W/R",
-"desc": "C/W/R Essentials Set with Block 790"
+"desc": "C/W/R Essentials Set with Block 790",
+"wps": 790
 },
 "1810C": {
 "p": 769,
 "cpo": 672,
 "pts": 500,
 "col": "C/W/R",
-"desc": "C/W/R Studio + 4 Set with Block 854"
+"desc": "C/W/R Studio + 4 Set with Block 854",
+"wps": 854
 },
 "1809C": {
 "p": 567,
 "cpo": 500,
 "pts": 370,
 "col": "C/W/R",
-"desc": "C/W/R Studio Set with Block 630"
+"desc": "C/W/R Studio Set with Block 630",
+"wps": 630
 },
 "1847C": {
 "p": 788,
 "cpo": 698,
 "pts": 520,
 "col": "C/W",
-"desc": "C/W Space Saver Set with Block 875"
+"desc": "C/W Space Saver Set with Block 875",
+"wps": 875
 },
 "2085C": {
 "p": 676,
 "cpo": 590,
 "pts": 435,
 "col": "C/W/R",
-"desc": "C/W/R All Knife Set with Tray 751"
+"desc": "C/W/R All Knife Set with Tray 751",
+"wps": 751
 },
 "1783C": {
 "p": 559,
 "cpo": 491,
 "pts": 360,
 "col": "C/W/R",
-"desc": "C/W/R Kitchenette Set with Tray 621"
+"desc": "C/W/R Kitchenette Set with Tray 621",
+"wps": 621
 },
 "1805C": {
 "p": 1072,
 "cpo": 988,
 "pts": 770,
 "col": "C/W",
-"desc": "C/W Gourmet Set with Block 1,218"
+"desc": "C/W Gourmet Set with Block 1,218",
+"wps": 1218
 },
 "1813C": {
 "p": 3519,
 "cpo": 3286,
 "pts": 2615,
 "col": "C/W",
-"desc": "C/W Ultimate Set with Block (w/ Table Knives) 4,240"
+"desc": "C/W Ultimate Set with Block (w/ Table Knives) 4,240",
+"wps": 4240
 },
 "6813C": {
 "p": 3938,
 "cpo": 3668,
 "pts": 3040,
 "col": "C/W",
-"desc": "C/W Ultimate Set with Steak Knives with Block 4,744"
+"desc": "C/W Ultimate Set with Steak Knives with Block 4,744",
+"wps": 4744
 },
 "1814C": {
 "p": 2565,
 "cpo": 2319,
 "pts": 1875,
 "col": "C/W/R",
-"desc": "C/W/R Signature Set with Block (w/ Table Knives) 3,018"
+"desc": "C/W/R Signature Set with Block (w/ Table Knives) 3,018",
+"wps": 3018
 },
 "6814C": {
 "p": 2922,
 "cpo": 2633,
 "pts": 2225,
 "col": "C/W/R",
-"desc": "C/W/R Signature Set with Steak Knives with Block 3,438"
+"desc": "C/W/R Signature Set with Steak Knives with Block 3,438",
+"wps": 3438
 },
 "2014C": {
 "p": 2576,
 "cpo": 2331,
 "pts": 1885,
 "col": "C/W",
-"desc": "C/W Santoku-Style Signature Set with Block (w/ Table Knives) 3,031"
+"desc": "C/W Santoku-Style Signature Set with Block (w/ Table Knives) 3,031",
+"wps": 3031
 },
 "6014C": {
 "p": 2933,
 "cpo": 2656,
 "pts": 2235,
 "col": "C/W",
-"desc": "C/W Santoku-Style Signature Set with Steak Knives with Block 3,451"
+"desc": "C/W Santoku-Style Signature Set with Steak Knives with Block 3,451",
+"wps": 3451
 },
 "1720": {
 "p": 85,
@@ -235,133 +257,152 @@
 "cpo": 2760,
 "pts": 2230,
 "col": "C/W/R",
-"desc": "C/W/R Ultimate Set with Block * 3,563"
+"desc": "C/W/R Ultimate Set with Block * 3,563",
+"wps": 3563
 },
 "1814CB": {
 "p": 2089,
 "cpo": 1872,
 "pts": 1550,
 "col": "C/W",
-"desc": "C/W Signature Set with Block * 2,458"
+"desc": "C/W Signature Set with Block * 2,458",
+"wps": 2458
 },
 "2014CB": {
 "p": 2100,
 "cpo": 1894,
 "pts": 1560,
 "col": "C/W/R",
-"desc": "C/W/R Santoku-Style Signature Set with Block * 2,471"
+"desc": "C/W/R Santoku-Style Signature Set with Block * 2,471",
+"wps": 2471
 },
 "1801CB": {
 "p": 1358,
 "cpo": 1227,
 "pts": 950,
 "col": "C/W",
-"desc": "C/W Homemaker Set with 1748 Block w/ French Chef * 1,552"
+"desc": "C/W Homemaker Set with 1748 Block w/ French Chef * 1,552",
+"wps": 1552
 },
 "2001CB": {
 "p": 1343,
 "cpo": 1213,
 "pts": 935,
 "col": "C/W/R",
-"desc": "C/W/R Homemaker Set with 1748 Block w/ Petite Chef * 1,535"
+"desc": "C/W/R Homemaker Set with 1748 Block w/ Petite Chef * 1,535",
+"wps": 1535
 },
 "2007CB": {
 "p": 945,
 "cpo": 852,
 "pts": 645,
 "col": "C/W",
-"desc": "C/W Galley Set with 1744 Block 1,068"
+"desc": "C/W Galley Set with 1744 Block 1,068",
+"wps": 1068
 },
 "1845CB": {
 "p": 711,
 "cpo": 638,
 "pts": 465,
 "col": "C/W/R",
-"desc": "C/W/R Essentials Set with 1651 Block 790"
+"desc": "C/W/R Essentials Set with 1651 Block 790",
+"wps": 790
 },
 "1809CB": {
 "p": 567,
 "cpo": 500,
 "pts": 370,
 "col": "C/W/R",
-"desc": "C/W/R Studio Set with 1751 Block 630"
+"desc": "C/W/R Studio Set with 1751 Block 630",
+"wps": 630
 },
 "4820C": {
 "p": 1515,
 "cpo": 1361,
 "pts": 1070,
 "col": "C/W/R",
-"desc": "C/W/R Galley + 6 Table Knives with Ultimate Block Upgrade 1,712"
+"desc": "C/W/R Galley + 6 Table Knives with Ultimate Block Upgrade 1,712",
+"wps": 1712
 },
 "4821C": {
 "p": 1719,
 "cpo": 1542,
 "pts": 1280,
 "col": "C/W/R",
-"desc": "C/W/R Galley + 6 Steak Knives with Ultimate Block Upgrade 1,964"
+"desc": "C/W/R Galley + 6 Steak Knives with Ultimate Block Upgrade 1,964",
+"wps": 1964
 },
 "4822C": {
 "p": 1429,
 "cpo": 1283,
 "pts": 1015,
 "col": "C/W/R",
-"desc": "C/W/R Galley + 6 Table Knives with Signature Block Upgrade 1,615"
+"desc": "C/W/R Galley + 6 Table Knives with Signature Block Upgrade 1,615",
+"wps": 1615
 },
 "4823C": {
 "p": 1634,
 "cpo": 1464,
 "pts": 1225,
 "col": "C/W/R",
-"desc": "C/W/R Galley + 6 Steak Knives with Signature Block Upgrade 1,867"
+"desc": "C/W/R Galley + 6 Steak Knives with Signature Block Upgrade 1,867",
+"wps": 1867
 },
 "4824C": {
 "p": 1246,
 "cpo": 1120,
 "pts": 850,
 "col": "C/W/R",
-"desc": "C/W/R Galley + 6 Table Knives with Homemaker Block Upgrade 1,408"
+"desc": "C/W/R Galley + 6 Table Knives with Homemaker Block Upgrade 1,408",
+"wps": 1408
 },
 "4826C": {
 "p": 1978,
 "cpo": 1777,
 "pts": 1410,
 "col": "C/W/R",
-"desc": "C/W/R Homemaker + 8 Table Knives with Ultimate Block Upgrade 2,287"
+"desc": "C/W/R Homemaker + 8 Table Knives with Ultimate Block Upgrade 2,287",
+"wps": 2287
 },
 "4827C": {
 "p": 2256,
 "cpo": 2023,
 "pts": 1690,
 "col": "C/W/R",
-"desc": "C/W/R Homemaker + 8 Steak Knives with Ultimate Block Upgrade 2,623"
+"desc": "C/W/R Homemaker + 8 Steak Knives with Ultimate Block Upgrade 2,623",
+"wps": 2623
 },
 "4828C": {
 "p": 1894,
 "cpo": 1702,
 "pts": 1355,
 "col": "C/W/R",
-"desc": "C/W/R Homemaker + 8 Table Knives with Signature Block Upgrade 2,190"
+"desc": "C/W/R Homemaker + 8 Table Knives with Signature Block Upgrade 2,190",
+"wps": 2190
 },
 "4829C": {
 "p": 2172,
 "cpo": 1948,
 "pts": 1635,
 "col": "C/W/R",
-"desc": "C/W/R Homemaker + 8 Steak Knives with Signature Block Upgrade 2,526"
+"desc": "C/W/R Homemaker + 8 Steak Knives with Signature Block Upgrade 2,526",
+"wps": 2526
 },
 "4830C": {
 "p": 2648,
 "cpo": 2379,
 "pts": 1925,
 "col": "C/W/R",
-"desc": "C/W/R Signature + 10 Table Knives with Ultimate Block Upgrade 3,115"
+"desc": "C/W/R Signature + 10 Table Knives with Ultimate Block Upgrade 3,115",
+"wps": 3115
 },
 "4831C": {
 "p": 2987,
 "cpo": 2680,
 "pts": 2275,
 "col": "C/W/R",
-"desc": "C/W/R Signature + 10 Steak Knives with Ultimate Block Upgrade 3,535"
+"desc": "C/W/R Signature + 10 Steak Knives with Ultimate Block Upgrade 3,535",
+"wps": 3535
 },
 "1504": {
 "p": 98,
@@ -424,7 +465,8 @@
 "cpo": 199,
 "pts": 140,
 "col": "C/W/R",
-"desc": "C/W/R 4-Pc. Table Knife Set with Tray 251"
+"desc": "C/W/R 4-Pc. Table Knife Set with Tray 251",
+"wps": 251
 },
 "1982": {
 "p": 318,
@@ -452,7 +494,8 @@
 "cpo": 409,
 "pts": 290,
 "col": "C/W/R",
-"desc": "C/W/R 6-Pc. Table Knife Set with Block 477"
+"desc": "C/W/R 6-Pc. Table Knife Set with Block 477",
+"wps": 477
 },
 "1866": {
 "p": 454,
@@ -473,7 +516,8 @@
 "cpo": 500,
 "pts": 355,
 "col": "C/W/R",
-"desc": "C/W/R 8-Pc. Table Knife Set with Block 589"
+"desc": "C/W/R 8-Pc. Table Knife Set with Block 589",
+"wps": 589
 },
 "1867": {
 "p": 678,
@@ -662,21 +706,24 @@
 "cpo": 333,
 "pts": 240,
 "col": "C/W",
-"desc": "C/W 3-Pc. Knife & Sheath Set 410"
+"desc": "C/W 3-Pc. Knife & Sheath Set 410",
+"wps": 410
 },
 "2033": {
 "p": 484,
 "cpo": 420,
 "pts": 305,
 "col": "C/W",
-"desc": "C/W 4-Pc. Knife & Sheath Set 520"
+"desc": "C/W 4-Pc. Knife & Sheath Set 520",
+"wps": 520
 },
 "2035": {
 "p": 695,
 "cpo": 611,
 "pts": 455,
 "col": "C/W",
-"desc": "C/W 5-Pc. Knife & Sheath Set 747"
+"desc": "C/W 5-Pc. Knife & Sheath Set 747",
+"wps": 747
 },
 "77": {
 "p": 149,
@@ -725,14 +772,16 @@
 "cpo": 148,
 "pts": 100,
 "col": "",
-"desc": "4-Pc. Cutlery Care Set 183"
+"desc": "4-Pc. Cutlery Care Set 183",
+"wps": 183
 },
 "1905": {
 "p": 104,
 "cpo": 90,
 "pts": 60,
 "col": "",
-"desc": "3-Pc. Cutting Board Set 115"
+"desc": "3-Pc. Cutting Board Set 115",
+"wps": 115
 },
 "84": {
 "p": 68,
@@ -781,28 +830,32 @@
 "cpo": 314,
 "pts": 220,
 "col": "C/W/R",
-"desc": "C/W/R 5-Pc. Kitchen Tool Set with Holder 402"
+"desc": "C/W/R 5-Pc. Kitchen Tool Set with Holder 402",
+"wps": 402
 },
 "1719": {
 "p": 290,
 "cpo": 252,
 "pts": 170,
 "col": "C/W/R",
-"desc": "C/W/R 5-Pc. Kitchen Tool Set (Tools Only) 330"
+"desc": "C/W/R 5-Pc. Kitchen Tool Set (Tools Only) 330",
+"wps": 330
 },
 "1792C": {
 "p": 425,
 "cpo": 381,
 "pts": 270,
 "col": "C/W",
-"desc": "C/W 6-Pc. Kitchen Tool Set with Holder 483"
+"desc": "C/W 6-Pc. Kitchen Tool Set with Holder 483",
+"wps": 483
 },
 "1793": {
 "p": 362,
 "cpo": 306,
 "pts": 225,
 "col": "C/W",
-"desc": "C/W 6-Pc. Kitchen Tool Set (Tools Only) 411"
+"desc": "C/W 6-Pc. Kitchen Tool Set (Tools Only) 411",
+"wps": 411
 },
 "1712": {
 "p": 66,
@@ -858,35 +911,40 @@
 "cpo": 191,
 "pts": 155,
 "col": "",
-"desc": "5-Pc. Stainless Place Setting with Stainless Table Knife 234"
+"desc": "5-Pc. Stainless Place Setting with Stainless Table Knife 234",
+"wps": 234
 },
 "1984": {
 "p": 1881,
 "cpo": 1379,
 "pts": 1900,
 "col": "",
-"desc": "60-Pc. Stainless Flatware Set in FREE Chest (12 Place Settings)** 2,808"
+"desc": "60-Pc. Stainless Flatware Set in FREE Chest (12 Place Settings)** 2,808",
+"wps": 2808
 },
 "1972": {
 "p": 181,
 "cpo": 169,
 "pts": 105,
 "col": "",
-"desc": "3-Pc. Stainless Serving Set* 190"
+"desc": "3-Pc. Stainless Serving Set* 190",
+"wps": 190
 },
 "1971": {
 "p": 181,
 "cpo": 169,
 "pts": 100,
 "col": "",
-"desc": "3-Pc. Stainless Hostess Set* 190"
+"desc": "3-Pc. Stainless Hostess Set* 190",
+"wps": 190
 },
 "1970": {
 "p": 361,
 "cpo": 338,
 "pts": 200,
 "col": "",
-"desc": "6-Pc. Stainless Accessory Set 380"
+"desc": "6-Pc. Stainless Accessory Set 380",
+"wps": 380
 },
 "1959": {
 "p": 78,
@@ -900,21 +958,24 @@
 "cpo": 222,
 "pts": 290,
 "col": "",
-"desc": "5-Pc. Garden Tool Set w/FREE Garden Bag 333"
+"desc": "5-Pc. Garden Tool Set w/FREE Garden Bag 333",
+"wps": 333
 },
 "332": {
 "p": 276,
 "cpo": 216,
 "pts": 235,
 "col": "",
-"desc": "4-Pc. Garden Tool Set with Bypass Pruners 297"
+"desc": "4-Pc. Garden Tool Set with Bypass Pruners 297",
+"wps": 297
 },
 "326": {
 "p": 135,
 "cpo": 83,
 "pts": 130,
 "col": "",
-"desc": "4-Pc. Garden Tool Set with Transplanting Trowel 145"
+"desc": "4-Pc. Garden Tool Set with Transplanting Trowel 145",
+"wps": 145
 },
 "328": {
 "p": 107,
@@ -1852,21 +1913,24 @@
 "cpo": 2326,
 "pts": 3350,
 "col": "C/W",
-"desc": "C/W Accomplished Chef Cookware Set* 4,279"
+"desc": "C/W Accomplished Chef Cookware Set* 4,279",
+"wps": 4279
 },
 "9918C": {
 "p": 2542,
 "cpo": 1703,
 "pts": 2330,
 "col": "C/W",
-"desc": "C/W Dedicated Chef Cookware Set* 2,990"
+"desc": "C/W Dedicated Chef Cookware Set* 2,990",
+"wps": 2990
 },
 "9901": {
 "p": 1617,
 "cpo": 1082,
 "pts": 1330,
 "col": "",
-"desc": "Aspiring Chef Cookware Set 1,702"
+"desc": "Aspiring Chef Cookware Set 1,702",
+"wps": 1702
 },
 "1161": {
 "p": 92,
@@ -2027,7 +2091,8 @@
 "cpo": 381,
 "pts": 800,
 "col": "",
-"desc": "3-Piece Nonstick Fry Pan Set 604"
+"desc": "3-Piece Nonstick Fry Pan Set 604",
+"wps": 604
 },
 "858": {
 "p": 175,

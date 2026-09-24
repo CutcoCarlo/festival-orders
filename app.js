@@ -3,7 +3,7 @@
    derived from the PIN and is never exported. */
 'use strict';
 
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.3.1';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const h = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -246,7 +246,7 @@ function plansFor(o, sub) { return PAY_PLANS.filter(p => (!p.giftOnly || isGiftO
 function totals(o) {
   const paid = o.items.filter(i => !i.free), free = o.items.filter(i => i.free);
   const sub = r2(paid.reduce((a, i) => a + (+i.qty || 0) * (+i.price || 0), 0));
-  const value = r2(o.items.reduce((a, i) => a + (+i.qty || 0) * (+i.retail || +i.price || 0), 0));
+  const value = r2(o.items.reduce((a, i) => a + (+i.qty || 0) * (+i.wps || +i.retail || +i.price || 0), 0));
   const cpoGross = r2(paid.reduce((a, i) => a + lineCpo(i), 0));
   const bonusPts = free.reduce((a, i) => a + (+i.qty || 0) * (+i.pts || 0), 0);
   const cpo = r2(cpoGross - bonusPts);
@@ -385,7 +385,7 @@ function renderItems() {
   }).join('') + `</div>` : `<p class="empty">Nothing found.<br>Use <b>+ Custom</b> to add an item that is not in the list.</p>`}`;
 }
 function newLine(p, st) {
-  return { id: uid(), key: p.key, b: p.b, sfx: p.sfx, col: p.col, out: p.out, ch: p.ch, o: p.o || [], gc: p.gc, name: p.name, qty: st.qty, price: st.price != null ? st.price : unitPrice(p, cur), retail: p.p, cpo: p.cpo, pts: p.pts, opts: Object.assign({}, st.opts), note: st.note || '', free: !!st.free, manual: st.price != null };
+  return { id: uid(), key: p.key, b: p.b, sfx: p.sfx, col: p.col, out: p.out, ch: p.ch, o: p.o || [], gc: p.gc, name: p.name, qty: st.qty, price: st.price != null ? st.price : unitPrice(p, cur), retail: p.p, wps: p.wps || 0, cpo: p.cpo, pts: p.pts, opts: Object.assign({}, st.opts), note: st.note || '', free: !!st.free, manual: st.price != null };
 }
 /* Options sheet: spec = { fam } | { key } | { line } (edit). */
 function optionsSheet(spec) {
@@ -407,7 +407,7 @@ function optionsSheet(spec) {
     (p.o || []).forEach(g => { if (!st.opts[g]) st.opts[g] = OPTION_GROUPS[g].choices[0]; });
     const up = st.price != null ? st.price : unitPrice(p, cur);
     const sel = (attr, label, choices, val) => `<div class="field"><label>${h(label)}</label><select data-o="${attr}">${choices.map(([v, t]) => `<option value="${h(v)}" ${String(val) === String(v) ? 'selected' : ''}>${h(t)}</option>`).join('')}</select></div>`;
-    let html = `<div class="sheethead"><div class="pimg ${hasImg(p.key) ? '' : 'none'}" style="${spriteStyle(p.key, 110)}"></div><div><h3>${h(fam ? fam.name : p.name)}</h3><div class="note" style="margin:0">#<b id="shNo"></b> · CPO ${money(p.cpo)} · ${p.pts} pts${p.e ? ' (est.)' : ''}</div></div></div>`;
+    let html = `<div class="sheethead"><div class="pimg ${hasImg(p.key) ? '' : 'none'}" style="${spriteStyle(p.key, 110)}"></div><div><h3>${h(fam ? fam.name : p.name)}</h3><div class="note" style="margin:0">#<b id="shNo"></b> · CPO ${money(p.cpo)} · ${p.pts} pts${p.e ? ' (est.)' : ''}${p.wps ? '<br>Value if purchased separately ' + money(p.wps) : ''}</div></div></div>`;
     if (fam) html += fam.dims.map((d, i) => sel('dim' + i, d.label, d.choices.map(c => [c, c]), st.dims[i])).join('');
     if (fam) html += `<p class="note" style="margin:-2px 0 8px">${h(p.name)}</p>`;
     if (p.col) html += sel('color', 'Handle Color', p.col.split('').map(c => [c, COLOR_NAMES[c]]), st.opts.color);
@@ -469,7 +469,7 @@ function renderCart() {
       <div class="ci"><div class="cn">${h(i.name)}</div><div class="cd">#${h(itemNo(i))}${i.b ? (lineDesc(i) ? ' · ' + h(lineDesc(i)) : '') : ''}${i.note ? ' · “' + h(i.note) + '”' : ''}<br>${q} × ${i.free ? 'FREE' : money(i.price)} · CPO ${money(lineCpo(i))}${i.free ? ' · −' + q * i.pts + ' pts' : ''}</div></div>
       <div class="lp">${i.free ? '$0.00' : money(q * i.price)}</div><div class="chev">›</div></div>`; }).join('')
     : '<p class="empty">Nothing in the cart yet.</p>')
-    + `<div class="box" style="margin-top:12px"><div class="tot"><span>Value (retail)</span><span class="money">${money(t.value)}</span></div><div class="tot"><span>Customer Pays</span><span class="money">${money(t.sub)}</span></div>${t.bonusPts ? `<div class="tot"><span>Bonus points given</span><span>${t.bonusPts} pts</span></div>` : ''}<div class="tot grand"><span>CPO</span><span class="money">${money(t.cpo)}</span></div></div>
+    + `<div class="box" style="margin-top:12px"><div class="tot"><span>Value (if purchased separately)</span><span class="money">${money(t.value)}</span></div><div class="tot"><span>Customer Pays</span><span class="money">${money(t.sub)}</span></div>${t.bonusPts ? `<div class="tot"><span>Bonus points given</span><span>${t.bonusPts} pts</span></div>` : ''}<div class="tot grand"><span>CPO</span><span class="money">${money(t.cpo)}</span></div></div>
     <p class="note">Tap an item to change its options, quantity, price or note, or to remove it.</p>`;
   $('#cartCount').textContent = cur.items.length ? `(${cur.items.reduce((n, i) => n + (+i.qty || 0), 0)})` : '';
 }
@@ -576,7 +576,7 @@ function summaryHtml(o, withCopy) {
     <div class="box"><div class="bh">Order items (${o.items.length})</div>
       ${o.items.map(i => `<div class="kv"><div class="k">${i.qty} × #${h(itemNo(i))}</div><div class="v">${h(itemLabel(i))}<br><span style="color:var(--orange);font-weight:600">${i.free ? 'FREE' : money(i.qty * i.price)}</span>${i.qty > 1 && !i.free ? ` <small style="color:var(--muted)">(${money(i.price)} each)</small>` : ''} <small style="color:var(--muted)">· CPO ${money(lineCpo(i))}${i.free ? ' · −' + (i.qty * i.pts) + ' pts' : ''}</small></div>${withCopy ? `<button class="copybtn" data-copy="${h(itemNo(i))}">Copy #</button>` : ''}</div>`).join('') || '<p class="note">No items yet.</p>'}</div>
     <div class="box"><div class="bh">Value / CPO</div>
-      <div class="tot"><span>Value (retail)</span><span class="money">${money(t.value)}</span></div>
+      <div class="tot"><span>Value (if purchased separately)</span><span class="money">${money(t.value)}</span></div>
       <div class="tot"><span>Customer Pays</span><span class="money">${money(t.sub)}</span></div>
       ${t.bonusPts ? `<div class="tot"><span>CPO before bonus</span><span class="money">${money(t.cpoGross)}</span></div><div class="tot"><span>Bonus points given</span><span>${t.bonusPts} pts</span></div>` : ''}
       <div class="tot grand"><span>CPO</span><span class="money">${money(t.cpo)}</span></div>
@@ -725,7 +725,7 @@ function orderText(o) {
   L.push('BILLING:\n  ' + addr(o.bill));
   L.push('SHIPPING: ' + (!o.shipReq ? 'not required' : o.shipSame ? 'same as billing' : '\n  ' + addr(o.ship)));
   L.push('ITEMS:\n' + o.items.map(i => `  ${i.qty} x #${itemNo(i)} ${itemLabel(i)} — ${i.free ? 'FREE' : money(i.qty * i.price)} (CPO ${money(lineCpo(i))})`).join('\n'));
-  L.push(`VALUE ${money(t.value)} | CUSTOMER PAYS ${money(t.sub)} | CPO ${money(t.cpo)}` + (t.bonusPts ? ` (after ${t.bonusPts} bonus pts)` : ''));
+  L.push(`VALUE (if purchased separately) ${money(t.value)} | CUSTOMER PAYS ${money(t.sub)} | CPO ${money(t.cpo)}` + (t.bonusPts ? ` (after ${t.bonusPts} bonus pts)` : ''));
   L.push(`PAYMENT: ${o.pay.method} | ${t.n} payment${t.n > 1 ? 's of ' + money(t.pays[0]) : ''} | Shipping: ${o.shipReq ? t.shipLabel : 'none'} | ${o.pay.taxable ? 'Taxable ' + o.pay.taxRate + '%' + (o.pay.taxSource === 'exact' ? ' (exact)' : ' (est.)') : 'Tax exempt'}` + (o.cardLast4 ? ` | Card ending ${o.cardLast4} (number is only on the phone)` : ''));
   L.push(`TOTALS: subtotal ${money(t.sub)}, shipping ${money(t.shipCost)}, admin fee ${money(t.fee)}, tax (est.) ${money(t.tax)}, TOTAL ${money(t.total)}`);
   if (o.pay.special) L.push('Special instructions: ' + o.pay.special);
