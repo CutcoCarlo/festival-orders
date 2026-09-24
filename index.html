@@ -58,6 +58,7 @@
     <button id="btnEdBack" class="btn icon" aria-label="Back">&#8249;</button>
     <div class="title" id="edTitle">New Order</div>
     <div class="spacer"></div>
+    <button id="btnCart" class="btn icon cartbtn" title="Cart" aria-label="Cart">&#128722;<span id="cartBadge" class="badge-n" hidden></span></button>
     <button id="btnEdClose" class="btn">Save &amp; Close</button>
   </header>
   <div class="steps" id="steps">
@@ -73,6 +74,21 @@
     <div class="spacer"></div>
     <div id="edTotal" class="total"></div>
     <button id="btnNext" class="btn primary">Next</button>
+  </footer>
+</section>
+
+<!-- ===== Cart ===== -->
+<section id="cart" class="screen" hidden>
+  <header class="bar">
+    <button id="btnCartBack" class="btn icon" aria-label="Back">&#8249;</button>
+    <div class="title">Cart <span id="cartCount"></span></div>
+    <div class="spacer"></div>
+  </header>
+  <div id="cartBody" class="body"></div>
+  <footer class="footbar">
+    <button id="btnCartMore" class="btn">+ Add more items</button>
+    <div class="spacer"></div>
+    <button id="btnCartNext" class="btn primary">Customer info ›</button>
   </footer>
 </section>
 
@@ -106,6 +122,7 @@
 
 <script src="catalog.js"></script>
 <script src="taxrates.js"></script>
+<script src="imglist.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

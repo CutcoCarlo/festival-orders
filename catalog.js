@@ -399,6 +399,45 @@ const CATALOG = [
   {"b": "GIFTCARD", "name": "Cutco Gift Card (enter amount; $50 min, $25 steps)", "c": "services", "p": 50, "gc": 1, "cpo": 0, "pts": 0}
 ];
 
+/* Families: one tile in the picker whose choices resolve to different item numbers (as the Cutco app does for sets).
+   dims = option questions; variants = choice values joined by '|' → catalog key (or {key, out}). */
+const FAMILIES = [
+  { name: 'Homemaker Set', cat: 'sets', img: '2018', dims: [
+      { label: 'Chef Knife', choices: ['7-5/8" Petite Chef', '9-1/4" French Chef'] },
+      { label: 'Storage / Table Knives', choices: ['Wood Block with 8 Table Knives', 'Basic Wood Block - No Table Knives', 'Trays - No Table Knives'] } ],
+    variants: { '7-5/8" Petite Chef|Wood Block with 8 Table Knives': '2018', '9-1/4" French Chef|Wood Block with 8 Table Knives': '1818',
+      '7-5/8" Petite Chef|Basic Wood Block - No Table Knives': '2001', '9-1/4" French Chef|Basic Wood Block - No Table Knives': '1801',
+      '7-5/8" Petite Chef|Trays - No Table Knives': '2000', '9-1/4" French Chef|Trays - No Table Knives': '1800' } },
+  { name: 'Galley Set', cat: 'sets', img: '2008', dims: [ { label: 'Storage / Table Knives', choices: ['Wood Block with 6 Table Knives', 'Basic Wood Block - No Table Knives'] } ],
+    variants: { 'Wood Block with 6 Table Knives': '2008', 'Basic Wood Block - No Table Knives': '2007' } },
+  { name: 'Essentials Set', cat: 'sets', img: '1945', dims: [ { label: 'Storage / Table Knives', choices: ['Wood Block with 5 Table Knives', 'Basic Wood Block - No Table Knives'] } ],
+    variants: { 'Wood Block with 5 Table Knives': '1945', 'Basic Wood Block - No Table Knives': '1845' } },
+  { name: 'Studio Set', cat: 'sets', img: '1810', dims: [ { label: 'Storage / Table Knives', choices: ['Wood Block with 4 Table Knives', 'Basic Wood Block - No Table Knives'] } ],
+    variants: { 'Wood Block with 4 Table Knives': '1810', 'Basic Wood Block - No Table Knives': '1809' } },
+  { name: 'Ultimate Set', cat: 'sets', img: '1813', dims: [ { label: 'Table or Steak', choices: ['Table Knives', 'Steak Knives'] } ], variants: { 'Table Knives': '1813', 'Steak Knives': '6813' } },
+  { name: 'Signature Set', cat: 'sets', img: '1814', dims: [ { label: 'Table or Steak', choices: ['Table Knives', 'Steak Knives'] } ], variants: { 'Table Knives': '1814', 'Steak Knives': '6814' } },
+  { name: 'Santoku-Style Signature Set', cat: 'sets', img: '2014', dims: [ { label: 'Table or Steak', choices: ['Table Knives', 'Steak Knives'] } ], variants: { 'Table Knives': '2014', 'Steak Knives': '6014' } },
+  { name: 'Homemaker Set B-Block (w/ Table Knife Slots)', cat: 'bblock', img: '2001B', dims: [ { label: 'Chef Knife', choices: ['7-5/8" Petite Chef', '9-1/4" French Chef'] } ], variants: { '7-5/8" Petite Chef': '2001B', '9-1/4" French Chef': '1801B' } },
+  { name: 'Galley + 6 with Ultimate Block Upgrade', cat: 'upgrade', img: '4820', dims: [ { label: 'Table or Steak', choices: ['Table Knives', 'Steak Knives'] } ], variants: { 'Table Knives': '4820', 'Steak Knives': '4821' } },
+  { name: 'Galley + 6 with Signature Block Upgrade', cat: 'upgrade', img: '4822', dims: [ { label: 'Table or Steak', choices: ['Table Knives', 'Steak Knives'] } ], variants: { 'Table Knives': '4822', 'Steak Knives': '4823' } },
+  { name: 'Homemaker + 8 with Ultimate Block Upgrade', cat: 'upgrade', img: '4826', dims: [ { label: 'Table or Steak', choices: ['Table Knives', 'Steak Knives'] } ], variants: { 'Table Knives': '4826', 'Steak Knives': '4827' } },
+  { name: 'Homemaker + 8 with Signature Block Upgrade', cat: 'upgrade', img: '4828', dims: [ { label: 'Table or Steak', choices: ['Table Knives', 'Steak Knives'] } ], variants: { 'Table Knives': '4828', 'Steak Knives': '4829' } },
+  { name: 'Signature + 10 with Ultimate Block Upgrade', cat: 'upgrade', img: '4830', dims: [ { label: 'Table or Steak', choices: ['Table Knives', 'Steak Knives'] } ], variants: { 'Table Knives': '4830', 'Steak Knives': '4831' } },
+  { name: 'Drop Point Hunting Knife', cat: 'sporting', img: '5718BK', dims: [ { label: 'Handle', choices: ['Black', 'Orange', 'Green Camo', 'Pink Camo'] } ],
+    variants: { 'Black': { key: '5718BK', out: 'BK' }, 'Orange': { key: '5718BK', out: 'H' }, 'Green Camo': { key: '5718GC', out: 'GC' }, 'Pink Camo': { key: '5718GC', out: 'PC' } } },
+  { name: 'Clip Point Outdoor Knife', cat: 'sporting', img: '5719BK', dims: [ { label: 'Handle', choices: ['Black', 'Orange', 'Green Camo', 'Pink Camo'] } ],
+    variants: { 'Black': { key: '5719BK', out: 'BK' }, 'Orange': { key: '5719BK', out: 'H' }, 'Green Camo': { key: '5719GC', out: 'GC' }, 'Pink Camo': { key: '5719GC', out: 'PC' } } },
+  { name: 'Gut Hook Hunting Knife', cat: 'sporting', img: '5717BK', dims: [ { label: 'Handle', choices: ['Black', 'Orange', 'Green Camo', 'Pink Camo'] } ],
+    variants: { 'Black': { key: '5717BK', out: 'BK' }, 'Orange': { key: '5717BK', out: 'H' }, 'Green Camo': { key: '5717GC', out: 'GC' }, 'Pink Camo': { key: '5717GC', out: 'PC' } } },
+  { name: "Fisherman's Solution", cat: 'sporting', img: '5721BK', dims: [ { label: 'Handle', choices: ['Black', 'Orange', 'Green Camo', 'Pink Camo'] } ],
+    variants: { 'Black': { key: '5721BK', out: 'BK' }, 'Orange': { key: '5721BK', out: 'H' }, 'Green Camo': { key: '5721GC', out: 'GC' }, 'Pink Camo': { key: '5721GC', out: 'PC' } } },
+  { name: 'Cleaver', cat: 'specialty', img: '1737', dims: [ { label: 'Version', choices: ['With Sheath', 'Cleaver Only'] } ], variants: { 'With Sheath': '1737', 'Cleaver Only': '1737-1' } },
+  { name: "Slice n' Serve", cat: 'access', img: '1754', dims: [ { label: 'Version', choices: ['Right-handed', 'Left-handed'] } ], variants: { 'Right-handed': '1754', 'Left-handed': '1754LH' } },
+  { name: "Slice n' Serve in Gift Box", cat: 'giftsets', img: '6754D', dims: [ { label: 'Version', choices: ['Right-handed', 'Left-handed'] } ], variants: { 'Right-handed': '6754D', 'Left-handed': '6754DLH' } },
+  { name: 'Party Favorites', cat: 'giftsets', img: '1837D', dims: [ { label: 'Version', choices: ['Right-handed', 'Left-handed'] } ], variants: { 'Right-handed': '1837D', 'Left-handed': '1837DLH' } },
+  { name: "Bake n' Serve Set (regular Gift Box)", cat: 'giftsets', img: '1854', dims: [ { label: 'Version', choices: ['Right-handed', 'Left-handed'] } ], variants: { 'Right-handed': '1854', 'Left-handed': '1854LH' } },
+  { name: 'Medium Cutting Board', cat: 'access', img: '125', dims: [ { label: 'Color', choices: ['White', 'Red'] } ], variants: { 'White': '125', 'Red': '125R' } }
+];
 const CUSTOMER_TYPES = ['Booth Sale/New Customer','Booth Sale/Customer Re-Order','Event Service Call Lead/New Customer',
   'Event Service Call Lead/Customer Re-Order','Event Free Look Lead/New Customer','Event Free Look Lead/Customer Re-Order','Other'];
 const ORDER_TYPES = ['Regular', 'Realtor', 'Business', 'Military', 'GSA'];

@@ -3,7 +3,7 @@
    derived from the PIN and is never exported. */
 'use strict';
 
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.3.0';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const h = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -28,11 +28,19 @@ let CUSTOM_ITEMS = LS.read('fo.custom', []);   // [{n,name,p,c:'custom'}]
 const saveOrders = () => LS.write('fo.orders', ORDERS);
 const saveSettings = () => LS.write('fo.settings', SETTINGS);
 
-const keyOf = i => i.b + (i.sfx || '');
+const keyOf = i => i.b + (i.sfx || '') + (i.out ? i.out[0] : '');
 function allProducts() {
   return CATALOG.map(i => { const k = keyOf(i); const p = PRICE_OVR[k] != null ? PRICE_OVR[k] : i.p; return Object.assign({}, i, { key: k, p }); })
     .concat(CUSTOM_ITEMS.map(c => Object.assign({ cpo: 0, pts: 0 }, c, { key: c.b, custom: true })));
 }
+/* Product photos live in sprite sheets (imglist.js). Returns a style string for a square of `size` px, or '' if no photo. */
+function spriteStyle(key, size) {
+  const S = typeof IMG_SPRITES !== 'undefined' ? IMG_SPRITES : null; if (!S) return '';
+  const p = S.pos[String(key || '').replace(/[^A-Za-z0-9]/g, '_')]; if (!p) return '';
+  const k = size / S.cell; const rows = Math.ceil(Object.values(S.pos).filter(x => x[0] === p[0]).length / S.cols);
+  return `background-image:url(${S.sheets[p[0]]});background-size:${S.cols * size}px ${rows * size}px;background-position:${-p[1] * size}px ${-p[2] * size}px`;
+}
+const hasImg = key => !!spriteStyle(key, 1);
 const isGiftOrder = o => GIFT_ORDER_TYPES.includes(o.info.orderType);
 const unitPrice = (it, o) => (isGiftOrder(o) && it.g != null) ? it.g : it.p;
 /* Item number as Cutco writes it: base + handle color letter + suffix, plus R for a cherry-finish block. */
@@ -310,6 +318,7 @@ async function saveCard() {
   } else { cur.card = null; cur.cardLast4 = ''; }
 }
 async function closeEditor(goDetail) {
+  if (!cur) { renderHome(); show('home'); return; }
   if (isNew && !cur.items.length && !cur.bill.first && !cur.bill.last) { ORDERS = ORDERS.filter(o => o.id !== cur.id); saveOrders(); cur = null; curCard = null; renderHome(); show('home'); return; }
   await saveCard(); persistCur();
   const id = cur.id; cur = null; curCard = null;
@@ -317,7 +326,7 @@ async function closeEditor(goDetail) {
   if (goDetail) openDetail(id); else show('home');
 }
 $('#btnEdBack').onclick = () => closeEditor(false);
-$('#btnEdClose').onclick = () => closeEditor(!isNew || cur.items.length > 0 || cur.bill.first);
+$('#btnEdClose').onclick = () => closeEditor(!!cur && (!isNew || cur.items.length > 0 || cur.bill.first));
 $('#steps').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { step = +b.dataset.s; renderStep(); } });
 $('#btnPrev').onclick = () => { if (step > 0) { step--; renderStep(); } };
 $('#btnNext').onclick = async () => {
@@ -342,50 +351,95 @@ function renderStep() {
 }
 function updateTotal() {
   const t = totals(cur); $('#edTotal').textContent = cur.items.length ? 'Total ' + money(t.total) : '';
+  const n = cur.items.reduce((s, i) => s + (+i.qty || 0), 0); $('#cartBadge').textContent = n || ''; $('#cartBadge').hidden = !n;
   $('#cpoBand').innerHTML = `<div><small>Value</small>${money(t.value)}</div><div><small>Customer Pays</small>${money(t.sub)}</div><div><small>CPO</small>${money(t.cpo)}</div>${t.bonusPts ? `<div><small>Bonus pts</small>${t.bonusPts}</div>` : ''}`;
 }
 function repriceLines() { cur.items.forEach(l => { if (l.manual || !l.b) return; const it = allProducts().find(p => p.key === l.key); if (it) l.price = unitPrice(it, cur); }); }
 
-/* --- step 1: items --- */
+/* --- step 1: items (photo grid → options sheet → cart) --- */
+const FAM_OF = (() => { const m = {}; (typeof FAMILIES !== 'undefined' ? FAMILIES : []).forEach(f => Object.values(f.variants).forEach(v => { m[typeof v === 'string' ? v : v.key] = f; })); return m; })();
+function tilesFor(list) {
+  const out = [], seen = new Set();
+  list.forEach(p => { const f = FAM_OF[p.key]; if (f) { if (!seen.has(f)) { seen.add(f); out.push({ fam: f, p }); } } else out.push({ p }); });
+  return out;
+}
+function famPrices(f) { const P = allProducts(); return Object.values(f.variants).map(v => P.find(x => x.key === (typeof v === 'string' ? v : v.key))).filter(Boolean).map(p => unitPrice(p, cur)); }
 function renderItems() {
   const prods = allProducts();
   const gift = isGiftOrder(cur);
   const q = itemQuery.trim().toLowerCase();
-  let list = q ? prods.filter(p => (p.name + ' ' + p.b).toLowerCase().includes(q)) : prods.filter(p => p.c === itemCat);
-  if (q) list = list.slice(0, 60);
+  let list = q ? prods.filter(p => (p.name + ' ' + p.b + ' ' + (FAM_OF[p.key] ? FAM_OF[p.key].name : '')).toLowerCase().includes(q)).slice(0, 80) : prods.filter(p => p.c === itemCat);
   const cats = CATEGORIES.filter(c => (c.id !== 'custom' || CUSTOM_ITEMS.length) && (c.id !== 'services' || gift));
-  const cart = cur.items.length ? `<div class="cart"><div class="hd">In this order <span class="spacer"></span><span style="color:var(--orange)">${money(totals(cur).sub)}</span></div>${cur.items.map(lineHtml).join('')}</div>` : '';
-  return `${cart}
+  const t = totals(cur);
+  const cartbar = cur.items.length ? `<button class="cartbar" id="btnCartBar"><span>${cur.items.reduce((n, i) => n + (+i.qty || 0), 0)} item${cur.items.length === 1 && cur.items[0].qty === 1 ? '' : 's'} in this order · <b>${money(t.sub)}</b></span><span class="lnk">View cart ›</span></button>` : '';
+  const tiles = tilesFor(list);
+  return `${cartbar}
   ${gift ? `<p class="note" style="margin:0 0 6px"><b>${h(cur.info.orderType)} order:</b> business-gift prices are used where Cutco publishes them.</p>` : ''}
   <div class="search"><input id="itemSearch" placeholder="Search name or item #" value="${h(itemQuery)}" autocomplete="off"><button class="btn small" id="btnCustomItem">+ Custom</button></div>
   ${q ? '' : `<div class="chips">${cats.map(c => `<button data-cat="${c.id}" class="${c.id === itemCat ? 'on' : ''}">${h(c.name)}</button>`).join('')}</div>`}
-  ${list.length ? list.map(p => { const up = unitPrice(p, cur); return `<div class="prod"><div class="info"><div class="pn">${h(p.name)}</div><div class="pi">#${h(p.b)}${p.col ? ' · ' + p.col.split('').map(c => COLOR_NAMES[c]).join('/') : ''}${p.na ? ' · <span style="color:var(--red)">not in Cutco app, use Special Instructions</span>' : ''}<br>CPO ${money(p.cpo)} · ${p.pts} pts${p.e ? ' <i title="estimated">(est.)</i>' : ''}</div></div><div class="pp">${money(up)}${up !== p.p ? `<small style="display:block;color:var(--muted);font-weight:400;text-align:right">retail ${money(p.p)}</small>` : ''}</div><button class="add" data-add="${h(p.key)}" aria-label="Add">+</button></div>`; }).join('') : `<p class="empty">Nothing found.<br>Use <b>+ Custom</b> to add an item that is not in the list.</p>`}`;
+  ${tiles.length ? `<div class="pgrid">` + tiles.map(tl => {
+    if (tl.fam) { const f = tl.fam; const ps = famPrices(f); const lo = Math.min(...ps), hi = Math.max(...ps); const fi = FAMILIES.indexOf(f);
+      return `<div class="ptile" data-open="fam:${fi}"><div class="pimg ${hasImg(f.img) ? '' : 'none'}" style="${spriteStyle(f.img, 140)}"></div><div class="pn">${h(f.name)}</div><div class="pi">${f.dims.map(d => h(d.label)).join(' · ')}</div><div class="pp">${lo === hi ? money(lo) : money(lo) + ' – ' + money(hi)}</div><button class="btn small addbtn">Choose options</button></div>`; }
+    const p = tl.p; const up = unitPrice(p, cur);
+    return `<div class="ptile" data-open="key:${h(p.key)}"><div class="pimg ${hasImg(p.key) ? '' : 'none'}" style="${spriteStyle(p.key, 140)}"></div><div class="pn">${h(p.name)}</div><div class="pi">#${h(p.b)}${p.col ? ' · ' + p.col.split('').map(c => COLOR_NAMES[c]).join('/') : ''}${p.na ? '<br><span style="color:var(--red)">not in Cutco app, use Special Instructions</span>' : ''}<br>CPO ${money(p.cpo)} · ${p.pts} pts${p.e ? ' <i title="estimated">(est.)</i>' : ''}</div><div class="pp">${money(up)}${up !== p.p ? ` <small style="color:var(--muted);font-weight:400">retail ${money(p.p)}</small>` : ''}</div><button class="btn small addbtn">${p.col || p.out || p.ch || (p.o || []).length ? 'Choose options' : 'Add to Order'}</button></div>`;
+  }).join('') + `</div>` : `<p class="empty">Nothing found.<br>Use <b>+ Custom</b> to add an item that is not in the list.</p>`}`;
 }
-function lineHtml(i) {
-  const sel = (attr, label, choices, val) => `<select data-opt="${attr}"><option value="" disabled>${label}</option>${choices.map(([v, t]) => `<option value="${h(v)}" ${val === v ? 'selected' : ''}>${h(t)}</option>`).join('')}</select>`;
-  let opts = '';
-  if (i.col) opts += sel('color', 'Handle', i.col.split('').map(c => [c, COLOR_NAMES[c]]), i.opts.color || i.col[0]);
-  if (i.out) opts += sel('out', 'Handle', i.out.map(c => [c, OUTDOOR_COLORS[c]]), i.opts.out || i.out[0]);
-  if (i.ch) opts += sel('cherry', 'Block', [['', 'Honey finish'], ['1', 'Cherry finish']], i.opts.cherry ? '1' : '');
-  (i.o || []).forEach(g => { if (OPTION_GROUPS[g]) opts += sel(g, OPTION_GROUPS[g].label, OPTION_GROUPS[g].choices.map(c => [c, c]), i.opts[g] || ''); });
-  const q = +i.qty || 0;
-  return `<div class="line ${i.free ? 'free' : ''}" data-line="${i.id}">
-    <div class="top"><div class="ln">${h(i.name)}<small>#${h(itemNo(i))} · CPO ${money(lineCpo(i))}${i.pts ? ' · ' + q * i.pts + ' pts' : ''}${i.free ? ' · <b style="color:var(--green)">FREE</b>' : ''}</small></div><div class="lp">${i.free ? '$0.00' : money(q * i.price)}</div></div>
-    ${opts ? `<div class="opts">${opts}</div>` : ''}
-    <div class="ctl"><div class="qty"><button data-q="-1">−</button><span>${q}</span><button data-q="1">+</button></div>
-      <input class="lprice" type="number" inputmode="decimal" step="0.01" value="${i.price}" data-lprice title="Unit price" ${i.free ? 'disabled' : ''}>
-      <label class="check" style="padding:0"><input type="checkbox" data-lfree ${i.free ? 'checked' : ''}> Free</label>
-      <input class="lnote" placeholder="Note (engraving, color…)" value="${h(i.note || '')}" data-lnote>
-      <button class="rm" data-rm>Remove</button></div>
-  </div>`;
+function newLine(p, st) {
+  return { id: uid(), key: p.key, b: p.b, sfx: p.sfx, col: p.col, out: p.out, ch: p.ch, o: p.o || [], gc: p.gc, name: p.name, qty: st.qty, price: st.price != null ? st.price : unitPrice(p, cur), retail: p.p, cpo: p.cpo, pts: p.pts, opts: Object.assign({}, st.opts), note: st.note || '', free: !!st.free, manual: st.price != null };
 }
-function addItem(key) {
-  const p = allProducts().find(x => x.key === key); if (!p) return;
-  const opts = {}; (p.o || []).forEach(g => { opts[g] = OPTION_GROUPS[g].choices[0]; });
-  if (p.col) opts.color = p.col[0]; if (p.out) opts.out = p.out[0];
-  cur.items.push({ id: uid(), key: p.key, b: p.b, sfx: p.sfx, col: p.col, out: p.out, ch: p.ch, o: p.o || [], gc: p.gc, name: p.name, qty: 1, price: unitPrice(p, cur), retail: p.p, cpo: p.cpo, pts: p.pts, opts, note: '', free: false, manual: false });
-  toast('Added ' + p.name); renderStep(); $('#edBody').scrollTop = 0;
+/* Options sheet: spec = { fam } | { key } | { line } (edit). */
+function optionsSheet(spec) {
+  const P = allProducts();
+  let fam = spec.fam || (spec.line ? FAM_OF[spec.line.key] : (spec.key ? FAM_OF[spec.key] : null));
+  if (spec.key && fam && !spec.fam) fam = null; // direct key tap on a family member: keep it simple, no dims
+  const st = { dims: [], opts: {}, qty: 1, price: null, free: false, note: '' };
+  if (spec.line) { const l = spec.line; Object.assign(st, { opts: Object.assign({}, l.opts), qty: l.qty, price: l.manual ? l.price : null, free: !!l.free, note: l.note || '' });
+    if (fam) { const ent = Object.entries(fam.variants).find(([k, v]) => (typeof v === 'string' ? v : v.key) === l.key && (typeof v === 'string' || v.out === l.opts.out)); st.dims = ent ? ent[0].split('|') : fam.dims.map(d => d.choices[0]); } }
+  else if (fam) st.dims = fam.dims.map(d => d.choices[0]);
+  function resolve() {
+    if (fam) { const v = fam.variants[st.dims.join('|')]; const key = typeof v === 'string' ? v : v.key; const p = P.find(x => x.key === key); if (p && typeof v !== 'string') st.opts.out = v.out; return p; }
+    return P.find(x => x.key === (spec.key || spec.line.key));
+  }
+  function render() {
+    const p = resolve(); if (!p) { closeSheet(); toast('Item not found'); return; }
+    if (p.col && !(p.col.includes(st.opts.color || ''))) st.opts.color = p.col[0];
+    if (p.out && !p.out.includes(st.opts.out)) st.opts.out = p.out[0];
+    (p.o || []).forEach(g => { if (!st.opts[g]) st.opts[g] = OPTION_GROUPS[g].choices[0]; });
+    const up = st.price != null ? st.price : unitPrice(p, cur);
+    const sel = (attr, label, choices, val) => `<div class="field"><label>${h(label)}</label><select data-o="${attr}">${choices.map(([v, t]) => `<option value="${h(v)}" ${String(val) === String(v) ? 'selected' : ''}>${h(t)}</option>`).join('')}</select></div>`;
+    let html = `<div class="sheethead"><div class="pimg ${hasImg(p.key) ? '' : 'none'}" style="${spriteStyle(p.key, 110)}"></div><div><h3>${h(fam ? fam.name : p.name)}</h3><div class="note" style="margin:0">#<b id="shNo"></b> · CPO ${money(p.cpo)} · ${p.pts} pts${p.e ? ' (est.)' : ''}</div></div></div>`;
+    if (fam) html += fam.dims.map((d, i) => sel('dim' + i, d.label, d.choices.map(c => [c, c]), st.dims[i])).join('');
+    if (fam) html += `<p class="note" style="margin:-2px 0 8px">${h(p.name)}</p>`;
+    if (p.col) html += sel('color', 'Handle Color', p.col.split('').map(c => [c, COLOR_NAMES[c]]), st.opts.color);
+    if (p.out && !fam) html += sel('out', 'Handle', p.out.map(c => [c, OUTDOOR_COLORS[c]]), st.opts.out);
+    if (p.ch) html += sel('cherry', 'Block Finish', [['', 'Honey'], ['1', 'Cherry']], st.opts.cherry ? '1' : '');
+    (p.o || []).forEach(g => { html += sel(g, OPTION_GROUPS[g].label, OPTION_GROUPS[g].choices.map(c => [c, c]), st.opts[g]); });
+    html += `<div class="shrow"><div class="qty"><button data-q="-1">−</button><span id="shQty">${st.qty}</span><button data-q="1">+</button></div>
+      <div class="field" style="flex:1;margin:0"><label>Unit price</label><input type="number" inputmode="decimal" step="0.01" id="shPrice" value="${up}"></div></div>
+      ${up !== p.p ? `<p class="note">Retail ${money(p.p)}${isGiftOrder(cur) && p.g != null ? ' · gift price ' + money(p.g) : ''}</p>` : ''}
+      <label class="check"><input type="checkbox" id="shFree" ${st.free ? 'checked' : ''}> Free (bonus item — takes ${p.pts} pts off CPO)</label>
+      <div class="field"><label>Note</label><input id="shNote" value="${h(st.note)}" placeholder="Engraving, special request…"></div>
+      <div class="acts">${spec.line ? '<button class="btn danger" id="shRemove">Remove</button>' : ''}<button class="btn" id="shCancel">Cancel</button><button class="btn primary" id="shOk">${spec.line ? 'Save' : 'Add to Order'} · ${money((st.free ? 0 : up) * st.qty)}</button></div>`;
+    openSheet(html);
+    const fake = { b: p.b, sfx: p.sfx, col: p.col, out: p.out, ch: p.ch, opts: st.opts }; $('#shNo').textContent = itemNo(fake);
+    const sh = $('#sheet');
+    sh.onchange = e => { const t = e.target; if (!t.dataset.o) return; const k = t.dataset.o;
+      if (k.startsWith('dim')) st.dims[+k.slice(3)] = t.value; else if (k === 'cherry') st.opts.cherry = !!t.value; else st.opts[k] = t.value; render(); };
+    sh.oninput = e => { if (e.target.id === 'shPrice') { st.price = e.target.value === '' ? null : +e.target.value; $('#shOk').textContent = (spec.line ? 'Save' : 'Add to Order') + ' · ' + money((st.free ? 0 : (st.price != null ? st.price : unitPrice(p, cur))) * st.qty); } if (e.target.id === 'shNote') st.note = e.target.value; if (e.target.id === 'shFree') { st.free = e.target.checked; render(); } };
+    sh.onclick = e => { const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.q) { st.qty = Math.max(1, st.qty + (+b.dataset.q)); render(); return; }
+      if (b.id === 'shCancel') { closeSheet(); return; }
+      if (b.id === 'shRemove') { cur.items = cur.items.filter(l => l !== spec.line); closeSheet(); afterCartChange(); toast('Removed'); return; }
+      if (b.id === 'shOk') {
+        if (st.price != null && st.price === unitPrice(p, cur)) st.price = null;
+        if (spec.line) { const l = spec.line; Object.assign(l, newLine(p, st), { id: l.id }); }
+        else cur.items.push(newLine(p, st));
+        closeSheet(); afterCartChange(); toast(spec.line ? 'Saved' : 'Added ' + p.name); } };
+  }
+  render();
 }
+function afterCartChange() { persistCur(); if (!$('#cart').hidden) renderCart(); else if (!$('#editor').hidden) { renderStep(); } updateTotal(); }
+function addItem(key) { optionsSheet({ key }); }
 function customItemSheet() {
   openSheet(`<h3>Custom item</h3>
     <div class="field"><label>Name</label><input id="ciName" placeholder="Item name"></div>
@@ -401,10 +455,29 @@ function customItemSheet() {
     if (!name) { toast('Give it a name'); return; }
     if ($('#ciKeep').checked && !allProducts().find(p => p.key === n)) { CUSTOM_ITEMS.push({ b: n, name, p: price, cpo, pts, c: 'custom' }); LS.write('fo.custom', CUSTOM_ITEMS); }
     cur.items.push({ id: uid(), key: n, b: n, o: [], name, qty: 1, price, retail: price, cpo, pts, opts: {}, note: '', free: false, manual: true });
-    closeSheet(); renderStep();
+    closeSheet(); afterCartChange();
   };
   setTimeout(() => $('#ciName').focus(), 50);
 }
+
+/* --- cart screen --- */
+function showCart() { renderCart(); show('cart'); }
+function renderCart() {
+  const t = totals(cur);
+  $('#cartBody').innerHTML = (cur.items.length ? cur.items.map(i => { const q = +i.qty || 0; return `<div class="cline ${i.free ? 'free' : ''}" data-line="${i.id}">
+      <div class="limg ${hasImg(i.key) ? '' : 'none'}" style="${spriteStyle(i.key, 56)}"></div>
+      <div class="ci"><div class="cn">${h(i.name)}</div><div class="cd">#${h(itemNo(i))}${i.b ? (lineDesc(i) ? ' · ' + h(lineDesc(i)) : '') : ''}${i.note ? ' · “' + h(i.note) + '”' : ''}<br>${q} × ${i.free ? 'FREE' : money(i.price)} · CPO ${money(lineCpo(i))}${i.free ? ' · −' + q * i.pts + ' pts' : ''}</div></div>
+      <div class="lp">${i.free ? '$0.00' : money(q * i.price)}</div><div class="chev">›</div></div>`; }).join('')
+    : '<p class="empty">Nothing in the cart yet.</p>')
+    + `<div class="box" style="margin-top:12px"><div class="tot"><span>Value (retail)</span><span class="money">${money(t.value)}</span></div><div class="tot"><span>Customer Pays</span><span class="money">${money(t.sub)}</span></div>${t.bonusPts ? `<div class="tot"><span>Bonus points given</span><span>${t.bonusPts} pts</span></div>` : ''}<div class="tot grand"><span>CPO</span><span class="money">${money(t.cpo)}</span></div></div>
+    <p class="note">Tap an item to change its options, quantity, price or note, or to remove it.</p>`;
+  $('#cartCount').textContent = cur.items.length ? `(${cur.items.reduce((n, i) => n + (+i.qty || 0), 0)})` : '';
+}
+$('#cartBody').addEventListener('click', e => { const c = e.target.closest('.cline'); if (!c) return; const l = cur.items.find(i => i.id === c.dataset.line); if (l) optionsSheet({ line: l }); });
+$('#btnCartBack').onclick = () => { show('editor'); renderStep(); };
+$('#btnCartMore').onclick = () => { step = 0; show('editor'); renderStep(); };
+$('#btnCartNext').onclick = () => { step = 1; show('editor'); renderStep(); };
+$('#btnCart').onclick = showCart;
 
 /* --- step 2: customer --- */
 const F = (label, path, opt = {}) => {
@@ -564,7 +637,10 @@ $('#edBody').addEventListener('change', e => {
   const line = t.closest('.line'); if (line && t.dataset.opt) { const it = cur.items.find(i => i.id === line.dataset.line); if (it) { it.opts[t.dataset.opt] = t.dataset.opt === 'cherry' ? !!t.value : t.value; line.querySelector('.ln small').firstChild.textContent = '#' + itemNo(it) + ' · CPO ' + money(lineCpo(it)); } }
 });
 $('#edBody').addEventListener('click', e => {
+  const tile = e.target.closest('[data-open]');
+  if (tile) { const [kind, val] = tile.dataset.open.split(/:(.+)/); if (kind === 'fam') optionsSheet({ fam: FAMILIES[+val] }); else optionsSheet({ key: val }); return; }
   const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'btnCartBar') { showCart(); return; }
   if (b.dataset.cat) { itemCat = b.dataset.cat; renderStep(); return; }
   if (b.dataset.add) { addItem(b.dataset.add); return; }
   if (b.id === 'btnCustomItem') { customItemSheet(); return; }

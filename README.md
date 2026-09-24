@@ -6,7 +6,13 @@ enter them in the real Cutco app. Pure static site: no build step, no server.
 
 Files: `index.html`, `style.css`, `app.js` (screens, storage, PIN/encryption, signature pad, tax lookup),
 `catalog.js` (GENERATED from `tools/build_catalog.py`: products, retail + business-gift prices, CPO, points, colors),
-`taxrates.js` (California city/county rates + ZIP-to-county for offline estimates), `sw.js` (offline cache), `manifest.webmanifest`, `icons/`.
+`taxrates.js` (California city/county rates + ZIP-to-county for offline estimates), `imglist.js` + `sprites/` (product photos packed into
+two sprite sheets by `tools/build_sprites.py`; source photos in `tools/img_src`, from images.cutco.com/products/shop/h/<item#>.jpg),
+`sw.js` (offline cache), `manifest.webmanifest`, `icons/`.
+
+Item picker: category chips → photo grid → tap a tile → options sheet (set variants from FAMILIES in catalog.js, handle color,
+block finish, quantity, price, free/bonus, note) → Add to Order. Cart button in the header opens the cart page; tapping a
+line reopens the options sheet to edit or remove it.
 
 Pricing / CPO: exact price, CPO and points from the L21 U.S. Price List (Mar 2026, parsed into `tools/l21_2026.json`); business-gift prices from the CGP Gifting
 Price List (Aug 2026) and Auxiliary Price List (Mar 2026). Items with no 2026 source carry `e` (estimated from 2019 ratios).
