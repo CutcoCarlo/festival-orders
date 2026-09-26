@@ -3,7 +3,7 @@
    derived from the PIN and is never exported. */
 'use strict';
 
-const APP_VERSION = '1.5.2';
+const APP_VERSION = '1.5.3';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const h = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -293,7 +293,7 @@ $('#orderList').addEventListener('click', e => {
   if (b) { const o = ORDERS.find(x => x.id === b.dataset.edit); if (!o) return; if (o.status === 'entered') openDetail(o.id); else openEditor(o, false); return; }
   const c = e.target.closest('.card'); if (c) openDetail(c.dataset.id); });
 $('#btnNew').onclick = () => { openEditor(newOrder(), true); };
-$('#btnSettings').onclick = () => { renderSettings(); show('settings'); };
+$('#btnSettings').onclick = () => { renderSettings(); show('settings'); offlineStatus(); };
 $('#btnShareAll').onclick = () => {
   const list = ORDERS.filter(o => o.status === 'ready');
   if (!list.length) { toast('No orders marked "To enter" yet'); return; }
@@ -813,7 +813,20 @@ function renderSettings() {
     <button class="btn wide" id="btnRestore">Restore from backup file</button>
     <button class="btn danger wide" id="btnPurge">Delete all entered orders</button>
     <h2 class="sec">About</h2>
+    <div class="st-row"><div class="l">Offline copy<small id="offlineInfo">Checking…</small></div></div>
     <p class="note">Festival Orders v${APP_VERSION}. Add to your home screen (Safari → Share → Add to Home Screen) so it opens offline and keeps its data. Open it once with signal after each update.</p>`;
+}
+async function offlineStatus() {
+  const el = $('#offlineInfo'); if (!el) return;
+  try {
+    if (!('caches' in window)) { el.textContent = 'Not available in this browser.'; return; }
+    const keys = (await caches.keys()).filter(k => k.startsWith('orders-')); if (!keys.length) { el.textContent = 'Not saved yet. Open the app once with signal, close it, and open it again.'; return; }
+    const k = keys.sort().pop(); const c = await caches.open(k); const urls = (await c.keys()).map(r => r.url);
+    const need = ['index.html', 'app.js', 'catalog.js', 'style.css', 'taxrates.js', 'imglist.js']; const missing = need.filter(n => !urls.some(u => u.endsWith('/' + n)));
+    const sheets = (typeof IMG_SPRITES !== 'undefined' ? IMG_SPRITES.sheets : []); const sheetsOk = sheets.filter(s => urls.some(u => u.endsWith('/' + s))).length;
+    el.textContent = missing.length ? 'Incomplete: missing ' + missing.join(', ') + '. Open the app again with signal.' : `Ready (${k.replace('orders-', '')}). ${urls.length} files saved, photos ${sheetsOk}/${sheets.length} sheets.` + (sheetsOk < sheets.length ? ' Open again with signal to finish saving photos.' : '');
+    el.style.color = missing.length || sheetsOk < sheets.length ? 'var(--red)' : 'var(--green)';
+  } catch (e) { el.textContent = 'Could not check.'; }
 }
 function catListHtml() {
   const q = catQuery.trim().toLowerCase();
